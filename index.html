@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1A1917">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>THE LEDGER — Cult of Sauna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1A1917;
+    --cream: #F4EEE4;
+    --amber: #C4A35A;
+    --muted: rgba(244, 238, 228, 0.45);
+    --faint: rgba(244, 238, 228, 0.14);
+    --green: #9DBB8F;
+    --red: #C97B66;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'DM Sans', Arial, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: calc(env(safe-area-inset-top) + 34px) 20px calc(env(safe-area-inset-bottom) + 40px);
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+
+  .wordmark { font-size: 11px; font-weight: 500; letter-spacing: 4px; color: var(--muted); text-align: center; }
+  h1 { font-family: var(--serif); font-weight: 500; font-size: 34px; letter-spacing: 1px; text-align: center; margin-top: 12px; }
+  .rule { width: 36px; border-top: 1px solid var(--amber); margin: 20px auto 0; }
+  .stamp { text-align: center; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 14px; }
+
+  /* ---------- gate ---------- */
+  #gate { display: none; margin-top: 12vh; text-align: center; }
+  #gate.active { display: block; }
+  #gate input {
+    margin-top: 36px; width: 100%; max-width: 300px;
+    background: transparent; border: 1px solid var(--faint); border-radius: 999px;
+    color: var(--cream); font-family: var(--sans); font-size: 16px; text-align: center;
+    padding: 14px 20px; outline: none; letter-spacing: 2px;
+  }
+  #gate input:focus { border-color: var(--amber); }
+  #gate button {
+    display: block; margin: 18px auto 0; padding: 13px 44px;
+    background: var(--amber); color: var(--ink); border: none; border-radius: 999px;
+    font-family: var(--sans); font-size: 13px; font-weight: 500; letter-spacing: 3px;
+    text-transform: uppercase; cursor: pointer;
+  }
+  #gate-error { margin-top: 16px; font-size: 13px; color: var(--red); min-height: 18px; }
+
+  /* ---------- ledger ---------- */
+  #ledger { display: none; }
+  #ledger.active { display: block; }
+
+  section { margin-top: 40px; }
+  .sec-title {
+    font-size: 11px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--amber); display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .sec-title .sub { color: var(--muted); letter-spacing: 1px; text-transform: none; font-size: 11px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th {
+    font-size: 10px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); text-align: right; padding: 12px 0 6px; width: 22%;
+  }
+  th:first-child { text-align: left; width: 34%; }
+  td {
+    font-family: var(--serif); font-size: 21px; font-weight: 500;
+    text-align: right; padding: 9px 0; border-top: 1px solid var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+  td.label {
+    font-family: var(--sans); font-size: 12px; letter-spacing: 1px;
+    color: var(--muted); text-align: left; font-weight: 400;
+  }
+  td.pos { color: var(--green); }
+  td.neg { color: var(--red); }
+  .pending { font-family: var(--sans); font-size: 12px; color: var(--muted); margin-top: 14px; border-top: 1px solid var(--faint); padding-top: 14px; }
+
+  #spark { display: block; width: 100%; height: 56px; margin-top: 18px; }
+
+  .footnote { font-size: 11px; line-height: 1.6; color: var(--muted); margin-top: 44px; border-top: 1px solid var(--faint); padding-top: 16px; }
+  .lock { display: block; text-align: center; margin-top: 28px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); background: none; border: none; cursor: pointer; font-family: var(--sans); width: 100%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="wordmark">CULT OF SAUNA</div>
+  <h1>The Ledger</h1>
+  <div class="rule"></div>
+
+  <div id="gate">
+    <input id="pw" type="password" placeholder="password" autocomplete="current-password" autofocus>
+    <button id="unlock">Enter</button>
+    <div id="gate-error"></div>
+  </div>
+
+  <div id="ledger">
+    <div class="stamp" id="stamp"></div>
+
+    <section>
+      <div class="sec-title">Shop <span class="sub" id="shop-sub"></span></div>
+      <table>
+        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>30 days</th></tr></thead>
+        <tbody id="shop-rows"></tbody>
+      </table>
+      <svg id="spark" viewBox="0 0 560 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+    </section>
+
+    <section>
+      <div class="sec-title">Meta</div>
+      <table>
+        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>30 days</th></tr></thead>
+        <tbody id="meta-rows"></tbody>
+      </table>
+    </section>
+
+    <section>
+      <div class="sec-title">Google</div>
+      <div id="google-body"></div>
+    </section>
+
+    <section>
+      <div class="sec-title">All-in marketing</div>
+      <table>
+        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>30 days</th></tr></thead>
+        <tbody id="blended-rows"></tbody>
+      </table>
+    </section>
+
+    <div class="footnote" id="footnote"></div>
+    <button class="lock" id="lock">Lock</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STORE_KEY = "cos-ledger-pw";
+  var gate = document.getElementById("gate");
+  var ledger = document.getElementById("ledger");
+  var errEl = document.getElementById("gate-error");
+  var encData = null;
+
+  function b64(s) {
+    var bin = atob(s), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return arr;
+  }
+
+  async function decrypt(password) {
+    var baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+    var key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64(encData.salt), iterations: 310000, hash: "SHA-256" },
+      baseKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+    );
+    var plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(encData.iv) }, key, b64(encData.ct));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  var SYM = "£";
+  function money(n, dp) {
+    if (n === null || n === undefined) return "—";
+    var neg = n < 0; n = Math.abs(n);
+    var s = n.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+    return (neg ? "−" : "") + SYM + s;
+  }
+  function num(n) { return n === null || n === undefined ? "—" : n.toLocaleString("en-GB"); }
+
+  function row(label, vals, opts) {
+    opts = opts || {};
+    var tds = vals.map(function (v) {
+      var cls = "";
+      if (opts.signed && typeof v === "number") cls = v >= 0 ? ' class="pos"' : ' class="neg"';
+      var text = opts.fmt ? opts.fmt(v) : v;
+      return "<td" + cls + ">" + text + "</td>";
+    }).join("");
+    return '<tr><td class="label">' + label + "</td>" + tds + "</tr>";
+  }
+
+  function windowsOf(obj) { return [obj.yesterday, obj.d7, obj.d30]; }
+
+  function render(d) {
+    SYM = d.currency === "GBP" ? "£" : d.currency + " ";
+    var upd = new Date(d.updated_at);
+    document.getElementById("stamp").textContent =
+      "Through " + d.windows.yesterday.end + " · updated " +
+      upd.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + " " +
+      upd.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+    var shop = windowsOf(d.shop);
+    document.getElementById("shop-rows").innerHTML =
+      row("Sales", shop.map(function (w) { return w.total_sales; }), { fmt: function (v) { return money(v, 0); } }) +
+      row("Net profit", shop.map(function (w) { return w.net_profit; }), { fmt: function (v) { return money(v, 0); }, signed: true }) +
+      row("Orders", shop.map(function (w) { return w.orders; }), { fmt: num });
+
+    var meta = windowsOf(d.meta);
+    document.getElementById("meta-rows").innerHTML =
+      row("Spend", meta.map(function (w) { return w.spend; }), { fmt: function (v) { return money(v, 0); } }) +
+      row("CPA", meta.map(function (w) { return w.cpa; }), { fmt: function (v) { return money(v, 2); } }) +
+      row("Purchases", meta.map(function (w) { return w.purchases; }), { fmt: num });
+
+    var gBody = document.getElementById("google-body");
+    if (d.google_connected) {
+      var g = windowsOf(d.google);
+      gBody.innerHTML = '<table><thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>30 days</th></tr></thead><tbody>' +
+        row("Spend", g.map(function (w) { return w.spend; }), { fmt: function (v) { return money(v, 0); } }) +
+        row("CPA", g.map(function (w) { return w.cpa; }), { fmt: function (v) { return money(v, 2); } }) +
+        "</tbody></table>";
+    } else {
+      gBody.innerHTML = '<div class="pending">Not connected yet. Paste the Ads Script into Google Ads (see ops/dashboard/README.md) and this section fills itself in.</div>';
+    }
+
+    var bl = windowsOf(d.blended);
+    document.getElementById("blended-rows").innerHTML =
+      row("Spend", bl.map(function (w) { return w.spend; }), { fmt: function (v) { return money(v, 0); } }) +
+      row("Blended CPA", bl.map(function (w) { return w.cpa; }), { fmt: function (v) { return money(v, 2); } }) +
+      row("MER", bl.map(function (w) { return w.mer; }), { fmt: function (v) { return v === null ? "—" : v.toFixed(2) + "×"; } });
+
+    document.getElementById("footnote").textContent =
+      "Net profit = net sales × " + Math.round(d.assumptions.gross_margin_ratio * 100) +
+      "% contribution margin, minus all ad spend. D2C only — B2B and fixed costs excluded. " +
+      "Blended CPA = total ad spend ÷ all Shopify orders. Meta CPA uses Meta-attributed purchases.";
+
+    drawSpark(d.series);
+    gate.classList.remove("active");
+    ledger.classList.add("active");
+  }
+
+  function drawSpark(series) {
+    if (!series || series.length < 2) return;
+    var svg = document.getElementById("spark");
+    var W = 560, H = 56, PAD = 2;
+    var max = Math.max.apply(null, series.map(function (p) { return p.sales; }));
+    var pts = series.map(function (p, i) {
+      var x = PAD + (i / (series.length - 1)) * (W - 2 * PAD);
+      var y = H - PAD - (p.sales / max) * (H - 2 * PAD);
+      return x.toFixed(1) + "," + y.toFixed(1);
+    });
+    svg.innerHTML = '<polyline fill="none" stroke="#C4A35A" stroke-width="1.5" points="' + pts.join(" ") + '"/>';
+  }
+
+  async function tryUnlock(password, silent) {
+    try {
+      var data = await decrypt(password);
+      localStorage.setItem(STORE_KEY, password);
+      render(data);
+    } catch (e) {
+      localStorage.removeItem(STORE_KEY);
+      if (!silent) errEl.textContent = "That's not it.";
+      gate.classList.add("active");
+    }
+  }
+
+  document.getElementById("unlock").addEventListener("click", function () {
+    tryUnlock(document.getElementById("pw").value, false);
+  });
+  document.getElementById("pw").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") tryUnlock(e.target.value, false);
+  });
+  document.getElementById("lock").addEventListener("click", function () {
+    localStorage.removeItem(STORE_KEY);
+    location.reload();
+  });
+
+  fetch("data.enc.json", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      encData = j;
+      var saved = localStorage.getItem(STORE_KEY);
+      if (saved) tryUnlock(saved, true);
+      else gate.classList.add("active");
+    })
+    .catch(function () {
+      gate.classList.add("active");
+      errEl.textContent = "No data file found.";
+    });
+})();
+</script>
+</body>
+</html>
