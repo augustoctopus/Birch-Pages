@@ -200,7 +200,10 @@
     document.getElementById("shop-rows").innerHTML =
       row("Sales", shop.map(function (w) { return w.total_sales; }), { fmt: function (v) { return money(v, 0); } }) +
       row("Net profit", shop.map(function (w) { return w.net_profit; }), { fmt: function (v) { return money(v, 0); }, signed: true }) +
-      row("Orders", shop.map(function (w) { return w.orders; }), { fmt: num });
+      row("Orders", shop.map(function (w) { return w.orders; }), { fmt: num }) +
+      row("Units (hat · towel)", shop.map(function (w) { return w; }), {
+        fmt: function (w) { return num(w.hat_units) + " · " + num(w.towel_units); }
+      });
 
     var meta = windowsOf(d.meta);
     document.getElementById("meta-rows").innerHTML =
@@ -225,9 +228,13 @@
       row("Blended CPA", bl.map(function (w) { return w.cpa; }), { fmt: function (v) { return money(v, 2); } }) +
       row("MER", bl.map(function (w) { return w.mer; }), { fmt: function (v) { return v === null ? "—" : v.toFixed(2) + "×"; } });
 
+    var a = d.assumptions;
     document.getElementById("footnote").textContent =
-      "Net profit = net sales × " + Math.round(d.assumptions.gross_margin_ratio * 100) +
-      "% contribution margin, minus all ad spend. D2C only — B2B and fixed costs excluded. " +
+      "Net profit = net sales − unit costs (hat £" + a.unit_costs_gbp.hat +
+      ", towel £" + a.unit_costs_gbp.towel + ") − $" + a.delivery_per_order_usd +
+      " delivery per order − $" + (a.fixed_daily_usd.staff + a.fixed_daily_usd.software) +
+      "/day staff & software − all ad spend (USD at " + a.fx_usd_gbp + "). " +
+      "D2C only — B2B and payment fees excluded. " +
       "Blended CPA = total ad spend ÷ all Shopify orders. Meta CPA uses Meta-attributed purchases.";
 
     drawSpark(d.series);
