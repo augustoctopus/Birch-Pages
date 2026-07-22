@@ -219,7 +219,8 @@
         var days = s.days_left;
         var cls = days === null ? "" : days < 14 ? ' class="neg"' : days < 30 ? "" : ' class="pos"';
         var daysTxt = days === null ? "—" : days > 999 ? "999+" : num(days);
-        var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : "Hat — ") + s.variant;
+        var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : "Hat — ") + s.variant +
+          ' <span style="color:var(--amber)">' + s.market + "</span>";
         return '<tr><td class="label">' + name + "</td><td>" + num(s.stock) + "</td><td>" +
           s.per_day.toFixed(1) + "</td><td" + cls + ">" + daysTxt + "</td></tr>";
       }).join("");
