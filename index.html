@@ -117,6 +117,14 @@
     </section>
 
     <section>
+      <div class="sec-title">Stock <span class="sub" id="stock-sub"></span></div>
+      <table>
+        <thead><tr><th>SKU</th><th>Stock</th><th>Per day</th><th>Days left</th></tr></thead>
+        <tbody id="stock-rows"></tbody>
+      </table>
+    </section>
+
+    <section>
       <div class="sec-title">Meta</div>
       <table>
         <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>30 days</th></tr></thead>
@@ -204,6 +212,18 @@
       row("Units (hat · towel)", shop.map(function (w) { return w; }), {
         fmt: function (w) { return num(w.hat_units) + " · " + num(w.towel_units); }
       });
+
+    if (d.stock && d.stock.skus.length) {
+      document.getElementById("stock-sub").textContent = "counted " + d.stock.fetched_at;
+      document.getElementById("stock-rows").innerHTML = d.stock.skus.map(function (s) {
+        var days = s.days_left;
+        var cls = days === null ? "" : days < 14 ? ' class="neg"' : days < 30 ? "" : ' class="pos"';
+        var daysTxt = days === null ? "—" : days > 999 ? "999+" : num(days);
+        var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : "Hat — ") + s.variant;
+        return '<tr><td class="label">' + name + "</td><td>" + num(s.stock) + "</td><td>" +
+          s.per_day.toFixed(1) + "</td><td" + cls + ">" + daysTxt + "</td></tr>";
+      }).join("");
+    }
 
     var meta = windowsOf(d.meta);
     document.getElementById("meta-rows").innerHTML =
