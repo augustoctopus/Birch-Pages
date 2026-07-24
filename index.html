@@ -88,6 +88,14 @@
 
   #spark { display: block; width: 100%; height: 56px; margin-top: 18px; }
 
+  .tabs { display: flex; gap: 8px; margin-top: 14px; }
+  .tab {
+    background: transparent; border: 1px solid var(--faint); border-radius: 999px;
+    color: var(--muted); font-family: var(--sans); font-size: 11px; font-weight: 500;
+    letter-spacing: 3px; text-transform: uppercase; padding: 8px 22px; cursor: pointer;
+  }
+  .tab.active { background: var(--amber); border-color: var(--amber); color: var(--ink); }
+
   .footnote { font-size: 11px; line-height: 1.6; color: var(--muted); margin-top: 44px; border-top: 1px solid var(--faint); padding-top: 16px; }
   .lock { display: block; text-align: center; margin-top: 28px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); background: none; border: none; cursor: pointer; font-family: var(--sans); width: 100%; }
 </style>
@@ -118,6 +126,10 @@
 
     <section>
       <div class="sec-title">Stock <span class="sub" id="stock-sub"></span></div>
+      <div class="tabs" id="stock-tabs">
+        <button class="tab active" data-market="US">US</button>
+        <button class="tab" data-market="UK">UK</button>
+      </div>
       <table>
         <thead><tr><th>SKU</th><th>Stock</th><th>Per day</th><th>Days left</th></tr></thead>
         <tbody id="stock-rows"></tbody>
@@ -215,15 +227,27 @@
 
     if (d.stock && d.stock.skus.length) {
       document.getElementById("stock-sub").textContent = "counted " + d.stock.fetched_at;
-      document.getElementById("stock-rows").innerHTML = d.stock.skus.map(function (s) {
-        var days = s.days_left;
-        var cls = days === null ? "" : days < 14 ? ' class="neg"' : days < 30 ? "" : ' class="pos"';
-        var daysTxt = days === null ? "—" : days > 999 ? "999+" : num(days);
-        var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : "Hat — ") + s.variant +
-          ' <span style="color:var(--amber)">' + s.market + "</span>";
-        return '<tr><td class="label">' + name + "</td><td>" + num(s.stock) + "</td><td>" +
-          s.per_day.toFixed(1) + "</td><td" + cls + ">" + daysTxt + "</td></tr>";
-      }).join("");
+      var renderStock = function (market) {
+        document.getElementById("stock-rows").innerHTML = d.stock.skus
+          .filter(function (s) { return s.market === market; })
+          .map(function (s) {
+            var days = s.days_left;
+            var cls = days === null ? "" : days < 14 ? ' class="neg"' : days < 30 ? "" : ' class="pos"';
+            var daysTxt = days === null ? "—" : days > 999 ? "999+" : num(days);
+            var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : "Hat — ") + s.variant;
+            return '<tr><td class="label">' + name + "</td><td>" + num(s.stock) + "</td><td>" +
+              s.per_day.toFixed(1) + "</td><td" + cls + ">" + daysTxt + "</td></tr>";
+          }).join("");
+      };
+      var tabs = document.querySelectorAll("#stock-tabs .tab");
+      tabs.forEach(function (t) {
+        t.addEventListener("click", function () {
+          tabs.forEach(function (o) { o.classList.remove("active"); });
+          t.classList.add("active");
+          renderStock(t.dataset.market);
+        });
+      });
+      renderStock("US");
     }
 
     var meta = windowsOf(d.meta);
