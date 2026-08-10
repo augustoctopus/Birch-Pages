@@ -114,6 +114,7 @@
 
   <div id="ledger">
     <div class="stamp" id="stamp"></div>
+    <div id="warnings" style="text-align:center; font-size:12px; line-height:1.6; color:var(--red); margin-top:10px;"></div>
 
     <section>
       <div class="sec-title">Shop <span class="sub" id="shop-sub"></span></div>
@@ -147,6 +148,14 @@
     <section>
       <div class="sec-title">Google</div>
       <div id="google-body"></div>
+    </section>
+
+    <section id="email-section" style="display:none">
+      <div class="sec-title">Email <span class="sub" id="email-sub"></span></div>
+      <table>
+        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>30 days</th></tr></thead>
+        <tbody id="email-rows"></tbody>
+      </table>
     </section>
 
     <section>
@@ -216,6 +225,12 @@
       upd.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + " " +
       upd.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
+    if (d.warnings && d.warnings.length) {
+      document.getElementById("warnings").innerHTML = d.warnings.map(function (w) {
+        return "⚠ " + w;
+      }).join("<br>");
+    }
+
     var shop = windowsOf(d.shop);
     document.getElementById("shop-rows").innerHTML =
       row("Sales", shop.map(function (w) { return w.total_sales; }), { fmt: function (v) { return money(v, 0); } }) +
@@ -265,6 +280,13 @@
         "</tbody></table>";
     } else {
       gBody.innerHTML = '<div class="pending">Not connected yet. Paste the Ads Script into Google Ads (see ops/dashboard/README.md) and this section fills itself in.</div>';
+    }
+
+    if (d.email) {
+      document.getElementById("email-section").style.display = "";
+      document.getElementById("email-sub").textContent = num(d.email.total) + " subscribers";
+      document.getElementById("email-rows").innerHTML =
+        row("Net new subs", [d.email.yesterday, d.email.d7, d.email.d30], { fmt: num, signed: true });
     }
 
     var bl = windowsOf(d.blended);
