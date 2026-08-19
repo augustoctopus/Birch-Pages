@@ -332,7 +332,11 @@
           }
           return '<tr><td class="label">' + name + "</td><td>" + num(s.stock) + "</td><td" + outCls + ">" +
             outTxt + "</td><td>" + inc + "</td></tr>";
-        }).join("");
+        }).join("") +
+        (d.stock.value && d.stock.value[market] !== undefined
+          ? '<tr><td class="label">Unsold stock value</td><td colspan="3" style="font-size:15px">' +
+            money(d.stock.value[market], 0) + "</td></tr>"
+          : "");
     };
     var tabs = document.querySelectorAll("#stock-tabs .tab");
     tabs.forEach(function (t) {
