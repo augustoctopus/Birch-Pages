@@ -136,7 +136,7 @@
     <section>
       <div class="sec-title">Shop</div>
       <table>
-        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th id="mtd-head">MTD</th></tr></thead>
+        <thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th id="mtd-head">MTD</th></tr></thead>
         <tbody id="shop-rows"></tbody>
       </table>
       <svg id="spark" viewBox="0 0 560 56" preserveAspectRatio="none" aria-hidden="true"></svg>
@@ -157,7 +157,7 @@
     <section>
       <div class="sec-title">Meta</div>
       <table>
-        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
+        <thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
         <tbody id="meta-rows"></tbody>
       </table>
     </section>
@@ -170,7 +170,7 @@
     <section id="email-section" style="display:none">
       <div class="sec-title">Email <span class="sub" id="email-sub"></span></div>
       <table>
-        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
+        <thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
         <tbody id="email-rows"></tbody>
       </table>
     </section>
@@ -178,7 +178,7 @@
     <section>
       <div class="sec-title">All-in marketing</div>
       <table>
-        <thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
+        <thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
         <tbody id="blended-rows"></tbody>
       </table>
     </section>
@@ -292,7 +292,7 @@
       row(d, "Purchases", "meta_purchases", {});
 
     document.getElementById("google-body").innerHTML = d.google_connected
-      ? '<table><thead><tr><th></th><th>Yesterday</th><th>7 days</th><th>MTD</th></tr></thead><tbody>' +
+      ? '<table><thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead><tbody>' +
         row(d, "Spend", "google_spend", { fmt: m0, goodUp: null }) +
         row(d, "CPA", "google_cpa", { fmt: m2, goodUp: false }) +
         "</tbody></table>"
@@ -352,6 +352,7 @@
       a.fx_usd_gbp + "). D2C only — B2B and payment fees excluded. Deltas: yesterday vs day before; 7 days vs prior 7; " +
       "MTD vs same days last month. Blended CPA = total ad spend ÷ all orders. Incoming = next PO (LH ETD ex-factory).";
 
+    document.querySelectorAll(".yday-h").forEach(function (h) { h.textContent = d.window_meta.yday.label; });
     drawSpark(d.series);
     gate.classList.remove("active");
     ledger.classList.add("active");
