@@ -61,6 +61,13 @@
   #ledger { display: none; }
   #ledger.active { display: block; }
 
+  #tripwires { margin-top: 28px; display: none; }
+  .tw-row { display: flex; gap: 10px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--faint); }
+  .tw-row:first-of-type { border-top: none; padding-top: 12px; }
+  .tw-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; position: relative; top: -1px; }
+  .tw-name { font-size: 12.5px; font-weight: 600; letter-spacing: 0.5px; width: 112px; flex: none; }
+  .tw-detail { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
   #notes { margin-top: 30px; border: 1px solid var(--faint); border-radius: 12px; padding: 16px 18px; display: none; }
   #notes .n-title { font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); }
   #notes ul { margin: 10px 0 0 16px; }
@@ -127,6 +134,11 @@
   <div id="ledger">
     <div class="stamp" id="stamp"></div>
     <div id="warnings"></div>
+
+    <div id="tripwires">
+      <div class="sec-title">Tripwires</div>
+      <div id="tw-rows"></div>
+    </div>
 
     <div id="notes">
       <div class="n-title" id="notes-title">Morning notes</div>
@@ -267,6 +279,15 @@
         d.warnings.map(function (w) { return "⚠ " + w; }).join("<br>");
     }
 
+    if (d.tripwires && d.tripwires.length) {
+      var COL = { green: "var(--green)", amber: "var(--amber)", red: "var(--red)" };
+      document.getElementById("tripwires").style.display = "block";
+      document.getElementById("tw-rows").innerHTML = d.tripwires.map(function (t) {
+        return '<div class="tw-row"><span class="tw-dot" style="background:' + (COL[t.status] || "var(--muted)") +
+          '"></span><span class="tw-name">' + t.name + '</span><span class="tw-detail">' + t.detail + "</span></div>";
+      }).join("");
+    }
+
     if (d.summary && d.summary.bullets && d.summary.bullets.length) {
       var n = document.getElementById("notes");
       n.style.display = "block";
@@ -306,7 +327,17 @@
         '<tr><td class="label">Net new subs</td>' + ["yday", "d7", "mtd"].map(function (k) {
           var v = e.windows[k], prev = e.compare ? e.compare[k] : null;
           return "<td>" + num(v) + deltaHtml(v, prev, true) + "</td>";
-        }).join("") + "</tr>";
+        }).join("") + "</tr>" +
+        (e.revenue
+          ? '<tr><td class="label">Attributed revenue</td>' + ["yday", "d7", "mtd"].map(function (k) {
+              var r = e.revenue[k];
+              return "<td>" + (r ? money(r.revenue, 0) + deltaHtml(r.revenue, r.prev, true) : "—") + "</td>";
+            }).join("") + "</tr>" +
+            '<tr><td class="label">Share of sales</td>' + ["yday", "d7", "mtd"].map(function (k) {
+              var r = e.revenue[k];
+              return "<td>" + (r && r.share !== null ? Math.round(r.share) + "%" + deltaHtml(r.share, r.prev_share, true) : "—") + "</td>";
+            }).join("") + "</tr>"
+          : "");
     }
 
     document.getElementById("blended-rows").innerHTML =
@@ -353,7 +384,9 @@
       "Net profit = net sales − unit costs (hat £" + a.unit_costs_gbp.hat + ", towel £" + a.unit_costs_gbp.towel +
       ") − $" + a.delivery_per_order_usd + " delivery per order − $" +
       (a.fixed_daily_usd.staff + a.fixed_daily_usd.software) + "/day staff & software − all ad spend (USD at " +
-      a.fx_usd_gbp + "). D2C only — B2B and payment fees excluded. Deltas: yesterday vs day before; 7 days vs prior 7; " +
+      a.fx_usd_gbp + "). From 1 Sep 2026 UK output VAT (20%) is also stripped from UK net sales in the profit model; " +
+      "where checkout already collects VAT nothing extra is deducted. D2C only — B2B and payment fees excluded. " +
+      "Email attributed revenue = Klaviyo attribution (campaigns + flows), event-time days. Deltas: yesterday vs day before; 7 days vs prior 7; " +
       "MTD vs same days last month. Blended CPA = total ad spend ÷ all orders. Incoming = next PO (LH ETD ex-factory).";
 
     document.querySelectorAll(".yday-h").forEach(function (h) { h.textContent = d.window_meta.yday.label; });
