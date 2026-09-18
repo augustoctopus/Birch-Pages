@@ -189,48 +189,34 @@
     </div>
 
     <div id="view-adslab" style="display:none">
+      <section>
+        <div class="sec-title">This week <span class="sub" id="lab-sub"></span></div>
+        <div class="lab-list" id="lab-verdict" style="font-size:14px;color:var(--cream);line-height:1.7"></div>
+      </section>
+
       <div id="flags-box" style="display:none">
-        <div class="n-title" id="flags-title">For Thursday</div>
+        <div class="n-title" id="flags-title">Decide on Thursday</div>
         <ul id="flags-list"></ul>
       </div>
 
       <section>
-        <div class="sec-title">Live ads <span class="sub" id="lab-sub"></span></div>
-        <div class="lab-list" id="lab-scope" style="margin-top:6px"></div>
-        <table id="lab-table">
-          <thead><tr><th>Ad</th><th>Spend</th><th>14d ROAS</th><th style="width:18%">State</th></tr></thead>
-          <tbody id="lab-rows"></tbody>
-        </table>
-      </section>
-
-      <section id="lab-closed-sec" style="display:none">
-        <div class="sec-title">Out of the running <span class="sub">last 14 days, already decided</span></div>
-        <div class="lab-list" style="margin-top:8px">PAUSED = switched off in Meta. WRITTEN OFF = Meta wouldn't show it; it stays on, costs nothing, and no longer counts as a test. Proposals needing a decision are in the For Thursday box, marked with a question mark.</div>
-        <div class="lab-list" id="lab-closed"></div>
+        <div class="sec-title">What we're trying to find out</div>
+        <div class="lab-list" id="lab-exp-live"></div>
       </section>
 
       <section>
-        <div class="sec-title">Evidence <span class="sub">small n = not a belief</span></div>
-        <div class="lab-list" id="lab-evidence"></div>
+        <div class="sec-title">Up next <span class="sub">the queue, so nothing obvious gets missed</span></div>
+        <div class="lab-list" id="lab-exp-next"></div>
       </section>
 
       <section>
-        <div class="sec-title">Prediction track record</div>
-        <div class="lab-list" id="lab-preds"></div>
+        <div class="sec-title">Answered <span class="sub">settled questions</span></div>
+        <div class="lab-list" id="lab-exp-done"></div>
       </section>
 
       <section>
-        <div class="sec-title">Reading this page</div>
-        <div class="lab-list">
-          <div class="rowline"><b>Anything with a question mark</b> (write off? pause? scale?) is a proposal for the Thursday readout. Nothing happens until Rick confirms. Chips without a question mark are facts.</div>
-          <div class="rowline"><b>Screening</b> · live in the test lane, still earning its 3,000-impression read.</div>
-          <div class="rowline"><b>Written off</b> · Meta's auction would not give it 3,000 impressions in 7+ days, which is Meta's way of declining the ad. It stays switched on (it spends almost nothing) but we stop watching it. Called "META PASSED" in the playbook files.</div>
-          <div class="rowline"><b>Paused</b> · genuinely switched off in Meta: over 3,000 impressions with 14d ROAS under the 1.65 breakeven, Rick confirmed.</div>
-          <div class="rowline"><b>Winner / control</b> · cleared the purchase gate and scaling in place / proven earlier, kept live as the reference bar.</div>
-          <div class="rowline"><b>Ad names</b> · exactly as they appear in Meta Ads Manager. The L number in each name (L14, L19...) is the lab's running counter for every ad ever drafted.</div>
-          <div class="rowline"><b>Angle</b> · the ad's argument: hair protection, handmade craft, customer review, identity ("every sauna master wears one"), or a hybrid like craft photo x hair claim.</div>
-          <div class="rowline"><b>Family</b> · what the ad looks like. Designed ad = a composed ad (photo, layout, headline). Native disguise = made to look like platform content (a text post, a Notes list, an iMessage thread).</div>
-        </div>
+        <div class="sec-title">Lessons learned</div>
+        <div class="lab-list" id="lab-lessons"></div>
       </section>
 
       <div class="footnote" id="lab-footnote"></div>
@@ -518,83 +504,38 @@
   function renderAdsLab(lab) {
     if (!lab) return; // no scorer output yet: tab stays hidden
 
-    var CHIP = {
-      winner: ["win", "winner"], control: ["win", "control"], screening: ["", "screening"],
-      live_warm: ["", "warm"], meta_passed_candidate: ["warn", "write off?"],
-      pause_candidate: ["bad", "pause?"], graduate_candidate: ["win", "scale?"],
-      meta_passed: ["", "written off"], paused_unprofitable: ["bad", "paused"],
-      killed_ctr_era: ["bad", "paused (old rule)"], closed_starved: ["", "starved"],
-    };
-    var chip = function (label) {
-      var c = CHIP[label] || ["", label.replace(/_/g, " ")];
-      return '<span class="chip ' + c[0] + '">' + c[1] + "</span>";
-    };
-    var roas = function (v) { return v === null || v === undefined || v === 0 ? "—" : v.toFixed(2); };
+    document.getElementById("lab-sub").textContent = "data through " + fmtDate(lab.data_until);
+    document.getElementById("lab-verdict").innerHTML = lab.verdict
+      ? lab.verdict.text
+      : "No weekly verdict written yet; the Thursday scorer adds it.";
 
     if (lab.flags && lab.flags.length) {
       document.getElementById("flags-box").style.display = "block";
       document.getElementById("flags-list").innerHTML =
-        lab.flags.map(function (f) { return "<li>" + f.note + "</li>"; }).join("");
+        lab.flags.map(function (f, i) { return "<li>" + (i + 1) + " · " + f.note + "</li>"; }).join("");
     }
 
-    document.getElementById("lab-sub").textContent = "through " + fmtDate(lab.data_until);
-    document.getElementById("lab-scope").textContent = lab.scope || "";
-    document.getElementById("lab-rows").innerHTML = lab.ads.map(function (a) {
-      var subBits = [a.campaign, a.attributes];
-      if (a.link_ctr_pct != null) subBits.push(a.link_ctr_pct + "% CTR · " + num(a.impressions) + " impr");
-      var roasCell = roas(a.d14_roas) +
-        '<span class="delta">' +
-        (a.verified_roas != null ? "ver " + roas(a.verified_roas) : (a.est_net ? "net ~" + roas(a.est_net) : "&nbsp;")) +
-        "</span>";
-      var name = '<span style="color:var(--cream);font-weight:600;word-break:break-all">' + (a.ad_name || a.id) + "</span>";
-      return '<tr><td class="label">' + name + '<span class="sub">' + subBits.join(" · ") + "</span></td>" +
-        "<td>" + money(a.spend, 0) + "</td><td>" + roasCell + "</td><td>" + chip(a.label) + "</td></tr>";
-    }).join("");
-
-    if (lab.recent_closures && lab.recent_closures.length) {
-      document.getElementById("lab-closed-sec").style.display = "";
-      document.getElementById("lab-closed").innerHTML = lab.recent_closures.map(function (c) {
-        return '<div class="rowline"><b style="word-break:break-all">' + (c.ad_name || c.id) + "</b> · " + chip(c.state) + " · " + fmtDate(c.state_date) +
-          "<br>" + c.reason + "</div>";
-      }).join("");
-    }
-
-    var evRows = function (groups) {
-      return Object.keys(groups).map(function (k) {
-        var g = groups[k];
-        var bits = [];
-        if (g.wins) bits.push(g.wins + " won");
-        if (g.losses) bits.push(g.losses + " paused");
-        if (g.meta_passed) bits.push(g.meta_passed + " written off");
-        if (g.screening) bits.push(g.screening + " live");
-        return '<div class="rowline"><b>' + k + "</b> · " + g.n + (g.n === 1 ? " ad" : " ads") + " · " +
-          (bits.join(" · ") || "no reads") + " · " + money(g.spend, 0) + " spend · " + g.purchases + " purchases</div>";
-      }).join("");
+    var exps = lab.experiments || [];
+    var expRow = function (e) {
+      var head = '<div style="color:var(--cream);font-weight:600;font-size:13.5px">' + e.question + "</div>";
+      var body = e.detail ? '<div>' + e.detail + "</div>" : "";
+      var status = "";
+      if (e.status === "live" && e.status_note) status = '<div style="color:var(--cream);opacity:0.75">' + e.status_note + "</div>";
+      if (e.status === "answered" && e.answer) status = '<div style="color:var(--cream);opacity:0.75">' + e.answer + " <span style='color:var(--muted)'>(" + fmtDate(e.answered) + ")</span></div>";
+      var due = e.status === "next" && e.due ? '<div style="color:var(--red)">Due by ' + fmtDate(e.due) + ".</div>" : "";
+      return '<div class="rowline">' + head + body + status + due + "</div>";
     };
-    document.getElementById("lab-evidence").innerHTML =
-      "<div style='margin-top:6px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By angle · the ad's argument</div>" + evRows(lab.evidence.by_angle) +
-      "<div style='margin-top:16px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By family · designed ad vs native disguise</div>" + evRows(lab.evidence.by_family);
+    document.getElementById("lab-exp-live").innerHTML = exps.filter(function (e) { return e.status === "live"; }).map(expRow).join("") || '<div class="rowline">Nothing live.</div>';
+    document.getElementById("lab-exp-next").innerHTML = exps.filter(function (e) { return e.status === "next"; }).map(expRow).join("") || '<div class="rowline">Queue empty.</div>';
+    document.getElementById("lab-exp-done").innerHTML = exps.filter(function (e) { return e.status === "answered"; }).map(expRow).join("");
 
-    var pd = lab.predictions;
-    var readable = pd.scored_true + pd.scored_false;
-    var predRows = (pd.scored || []).map(function (p) {
-      var good = p.score === "TRUE";
-      return '<div class="rowline"><b style="word-break:break-all">' + (p.ad_name || p.id) + '</b> · <span class="chip ' + (good ? "win" : "bad") + '">' +
-        (good ? "came true" : "wrong") + "</span><br>Before launch we wrote: " + p.call +
-        (p.outcome ? "<br>What happened: " + p.outcome : "") + "</div>";
+    document.getElementById("lab-lessons").innerHTML = (lab.lessons || []).map(function (l) {
+      return '<div class="rowline">' + l.text + ' <span style="color:var(--muted)">(' + fmtDate(l.date) + ")</span></div>";
     }).join("");
-    document.getElementById("lab-preds").innerHTML =
-      "Before every ad launches, we write down in one sentence how we expect it to perform. When the results land, each written call is marked came true or wrong. This measures whether our instincts about ads are actually any good. So far: " +
-      "<b>" + pd.scored_true + " of " + readable + "</b> calls that got an answer came true. " +
-      pd.unreadable + " ads never got enough delivery to answer their call. " + pd.pending + " calls are still waiting on data" +
-      (pd.pending_ids && pd.pending_ids.length ? " (" + pd.pending_ids.join(", ") + ")" : "") + "." +
-      predRows;
 
     document.getElementById("lab-footnote").textContent =
-      "Scored weekly before the Thursday readout; labels are candidates, not decisions; pauses, closes and budget moves are confirmed by Rick at the readout. " +
-      "Gates: " + lab.gates.floor.toLocaleString("en-GB") + " impression floor; pause only below " + lab.gates.pause_below_14d +
-      " 14d Meta ROAS; graduate ≥ " + lab.gates.graduate_meta + " Meta ≈ " + lab.gates.graduate_net + " Shopify-net. " +
-      "ver = Shopify last-click via utm (14d window, undercounts vs Meta view-through; truth sits between). net ~ = Meta ÷ 1.2 VAT estimate.";
+      (lab.scope || "") + " Scored weekly before the Thursday readout; every proposal above needs Rick's confirm, nothing is automatic. " +
+      "Full ad-level detail (every ad, evidence tables, prediction history) is generated locally at cult-of-sauna/ads-lab/detail.html on the studio machine and is not published.";
   }
 
   function setView(v) {
