@@ -638,9 +638,11 @@
       return '<span class="chip ' + c[0] + '">' + (b.status_label || c[1]) + "</span>";
     };
     var card = function (a) {
-      return '<div class="sweep-ad"><div class="sweep-imgbox">' +
+      var media = '<div class="sweep-imgbox">' +
         (a.video ? '<span class="sweep-vid">VIDEO</span>' : "") +
-        '<img loading="lazy" src="' + a.img + '" alt="Competitor ad"></div>' +
+        '<img loading="lazy" src="' + a.img + '" alt="Competitor ad"></div>';
+      if (a.url) media = '<a href="' + a.url + '" target="_blank" rel="noopener" title="Open this ad in the Meta Ad Library">' + media + "</a>";
+      return '<div class="sweep-ad">' + media +
         '<div class="sweep-cap"><div class="sweep-hook">&ldquo;' + a.hook + '&rdquo;</div>' +
         '<div class="sweep-meta">' + a.meta + "</div></div></div>";
     };
