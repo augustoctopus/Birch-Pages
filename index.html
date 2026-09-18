@@ -516,9 +516,13 @@
     var evRows = function (groups) {
       return Object.keys(groups).map(function (k) {
         var g = groups[k];
+        var bits = [];
+        if (g.wins) bits.push(g.wins + " won");
+        if (g.losses) bits.push(g.losses + " paused");
+        if (g.meta_passed) bits.push(g.meta_passed + " written off");
+        if (g.screening) bits.push(g.screening + " live");
         return '<div class="rowline"><b>' + k + "</b> · " + g.n + (g.n === 1 ? " ad" : " ads") + " · " +
-          g.wins + "W " + g.losses + "L " + g.meta_passed + "MP " + g.screening + " live · " +
-          money(g.spend, 0) + " · " + g.purchases + " purch</div>";
+          (bits.join(" · ") || "no reads") + " · " + money(g.spend, 0) + " spend · " + g.purchases + " purchases</div>";
       }).join("");
     };
     document.getElementById("lab-evidence").innerHTML =
