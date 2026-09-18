@@ -174,7 +174,8 @@
       </section>
 
       <section id="lab-closed-sec" style="display:none">
-        <div class="sec-title">Recently closed</div>
+        <div class="sec-title">Off the board <span class="sub">last 14 days</span></div>
+        <div class="lab-list" style="margin-top:8px">Closed as experiments. Only PAUSED means switched off in Meta; META PASSED ads stay live but no longer count as tests.</div>
         <div class="lab-list" id="lab-closed"></div>
       </section>
 
@@ -184,8 +185,22 @@
       </section>
 
       <section>
-        <div class="sec-title">Predictions</div>
+        <div class="sec-title">Prediction track record</div>
         <div class="lab-list" id="lab-preds"></div>
+      </section>
+
+      <section>
+        <div class="sec-title">Reading this page</div>
+        <div class="lab-list">
+          <div class="rowline"><b>Screening</b> · live in the test lane, still earning its 3,000-impression read.</div>
+          <div class="rowline"><b>Meta passed</b> · Meta's auction would not feed it 3,000 impressions in 7+ days. That is Meta declining the ad, so it stops counting as a test. It stays switched on in Meta and spends almost nothing; nothing is deactivated.</div>
+          <div class="rowline"><b>Close: meta passed</b> · the scorer proposes that close for the Thursday readout. Nothing happens until Rick confirms.</div>
+          <div class="rowline"><b>Paused</b> · genuinely switched off in Meta: over 3,000 impressions with 14d ROAS under the 1.65 breakeven, Rick confirmed.</div>
+          <div class="rowline"><b>Winner / control</b> · cleared the purchase gate and scaling in place / proven earlier, kept live as the reference bar.</div>
+          <div class="rowline"><b>Angle</b> · the ad's argument. hair = hair protection · craft = handmade story · proof = customer review · ritual-identity = "every sauna master wears one" · craft-x-hair = hair claim on the craft photo.</div>
+          <div class="rowline"><b>Family</b> · what the ad looks like. designed = a composed ad (photo, layout, headline) · native-ui = disguised as platform content (text post, Notes list, iMessage thread).</div>
+          <div class="rowline"><b>Predictions</b> · every ad launches with a written call on how it will do; readouts score each call true or false once data lands. The tally shows whether our instincts beat a coin flip.</div>
+        </div>
       </section>
 
       <div class="footnote" id="lab-footnote"></div>
@@ -508,14 +523,14 @@
       }).join("");
     };
     document.getElementById("lab-evidence").innerHTML =
-      "<div style='margin-top:6px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By angle</div>" + evRows(lab.evidence.by_angle) +
-      "<div style='margin-top:16px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By family</div>" + evRows(lab.evidence.by_family);
+      "<div style='margin-top:6px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By angle · the ad's argument</div>" + evRows(lab.evidence.by_angle) +
+      "<div style='margin-top:16px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By family · designed ad vs native disguise</div>" + evRows(lab.evidence.by_family);
 
     var pd = lab.predictions;
     var readable = pd.scored_true + pd.scored_false;
     document.getElementById("lab-preds").innerHTML =
-      "<b>" + pd.scored_true + " / " + readable + "</b> readable pre-registered predictions scored TRUE · " +
-      pd.unreadable + " unreadable (starved) · " + pd.pending + " pending";
+      "<b>" + pd.scored_true + " of " + readable + "</b> pre-launch calls came true, of the " + readable + " that got a readable answer · " +
+      pd.unreadable + " never got a read (ad starved) · " + pd.pending + " still awaiting data";
 
     document.getElementById("lab-footnote").textContent =
       "Scored weekly before the Thursday readout; labels are candidates, not decisions; pauses, closes and budget moves are confirmed by Rick at the readout. " +
