@@ -113,6 +113,25 @@
   #stock-table .inc { font-size: 11.5px; font-weight: 400; }
   .pending { font-size: 12px; color: var(--muted); margin-top: 14px; border-top: 1px solid var(--faint); padding-top: 14px; }
 
+  /* ---------- page tabs + ads lab ---------- */
+  #page-tabs { display: none; justify-content: center; gap: 8px; margin-top: 24px; }
+  #page-tabs.on { display: flex; }
+  #flags-box { margin-top: 28px; border: 1px solid rgba(196,163,90,0.45); border-radius: 12px; padding: 16px 18px; }
+  #flags-box .n-title { font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); }
+  #flags-box ul { margin: 10px 0 0 16px; }
+  #flags-box li { font-size: 13.5px; line-height: 1.55; color: var(--cream); margin-top: 7px; }
+  .chip { display: inline-block; font-size: 10px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+    border-radius: 999px; padding: 3px 10px; border: 1px solid var(--faint); color: var(--muted); white-space: nowrap; }
+  .chip.win { border-color: rgba(157,187,143,0.5); color: var(--green); }
+  .chip.warn { border-color: rgba(196,163,90,0.6); color: var(--amber); }
+  .chip.bad { border-color: rgba(201,123,102,0.6); color: var(--red); }
+  #lab-table td { font-size: 14px; }
+  #lab-table .sub { display: block; font-size: 10.5px; font-weight: 400; color: var(--muted); margin-top: 2px; letter-spacing: 0.3px; }
+  #lab-table td.label { min-width: 0; }
+  .lab-list { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin-top: 10px; }
+  .lab-list b { color: var(--cream); font-weight: 600; }
+  .lab-list .rowline { padding: 8px 0; border-top: 1px solid var(--faint); }
+
   #spark { display: block; width: 100%; height: 56px; margin-top: 18px; }
 
   .footnote { font-size: 11px; line-height: 1.6; color: var(--muted); margin-top: 44px; border-top: 1px solid var(--faint); padding-top: 16px; }
@@ -135,6 +154,44 @@
     <div class="stamp" id="stamp"></div>
     <div id="warnings"></div>
 
+    <div id="page-tabs">
+      <button class="tab active" data-view="daily">Daily</button>
+      <button class="tab" data-view="adslab">Ads lab</button>
+    </div>
+
+    <div id="view-adslab" style="display:none">
+      <div id="flags-box" style="display:none">
+        <div class="n-title" id="flags-title">For Thursday</div>
+        <ul id="flags-list"></ul>
+      </div>
+
+      <section>
+        <div class="sec-title">Live ads <span class="sub" id="lab-sub"></span></div>
+        <table id="lab-table">
+          <thead><tr><th>Ad</th><th>Spend</th><th>14d ROAS</th><th style="width:18%">State</th></tr></thead>
+          <tbody id="lab-rows"></tbody>
+        </table>
+      </section>
+
+      <section id="lab-closed-sec" style="display:none">
+        <div class="sec-title">Recently closed</div>
+        <div class="lab-list" id="lab-closed"></div>
+      </section>
+
+      <section>
+        <div class="sec-title">Evidence <span class="sub">small n = not a belief</span></div>
+        <div class="lab-list" id="lab-evidence"></div>
+      </section>
+
+      <section>
+        <div class="sec-title">Predictions</div>
+        <div class="lab-list" id="lab-preds"></div>
+      </section>
+
+      <div class="footnote" id="lab-footnote"></div>
+    </div>
+
+    <div id="view-daily">
     <div id="tripwires">
       <div class="sec-title">Tripwires</div>
       <div id="tw-rows"></div>
@@ -196,6 +253,7 @@
     </section>
 
     <div class="footnote" id="footnote"></div>
+    </div><!-- /view-daily -->
     <button class="lock" id="lock">Lock</button>
   </div>
 </div>
@@ -391,9 +449,93 @@
 
     document.querySelectorAll(".yday-h").forEach(function (h) { h.textContent = d.window_meta.yday.label; });
     drawSpark(d.series);
+    renderAdsLab(d.adslab);
     gate.classList.remove("active");
     ledger.classList.add("active");
   }
+
+  // ---------- ads lab tab ----------
+  var VIEW_KEY = "cos-ledger-view";
+  function renderAdsLab(lab) {
+    if (!lab) { setView("daily"); return; } // no scorer output yet: tabs stay hidden, daily-only page
+    document.getElementById("page-tabs").classList.add("on");
+
+    var CHIP = {
+      winner: ["win", "winner"], control: ["win", "control"], screening: ["", "screening"],
+      live_warm: ["", "warm"], meta_passed_candidate: ["warn", "close: meta passed"],
+      pause_candidate: ["bad", "pause candidate"], graduate_candidate: ["win", "graduate candidate"],
+      meta_passed: ["", "meta passed"], paused_unprofitable: ["bad", "paused"],
+      killed_ctr_era: ["bad", "killed"], closed_starved: ["", "starved"],
+    };
+    var chip = function (label) {
+      var c = CHIP[label] || ["", label.replace(/_/g, " ")];
+      return '<span class="chip ' + c[0] + '">' + c[1] + "</span>";
+    };
+    var roas = function (v) { return v === null || v === undefined || v === 0 ? "—" : v.toFixed(2); };
+
+    if (lab.flags && lab.flags.length) {
+      document.getElementById("flags-box").style.display = "block";
+      document.getElementById("flags-list").innerHTML =
+        lab.flags.map(function (f) { return "<li>" + f.note + "</li>"; }).join("");
+    }
+
+    document.getElementById("lab-sub").textContent = "through " + fmtDate(lab.data_until);
+    document.getElementById("lab-rows").innerHTML = lab.ads.map(function (a) {
+      var subBits = [a.batch, a.attributes];
+      if (a.link_ctr_pct != null) subBits.push(a.link_ctr_pct + "% CTR · " + num(a.impressions) + " impr");
+      var roasCell = roas(a.d14_roas) +
+        '<span class="delta">' +
+        (a.verified_roas != null ? "ver " + roas(a.verified_roas) : (a.est_net ? "net ~" + roas(a.est_net) : "&nbsp;")) +
+        "</span>";
+      return '<tr><td class="label">' + a.id + '<span class="sub">' + subBits.join(" · ") + "</span></td>" +
+        "<td>" + money(a.spend, 0) + "</td><td>" + roasCell + "</td><td>" + chip(a.label) + "</td></tr>";
+    }).join("");
+
+    if (lab.recent_closures && lab.recent_closures.length) {
+      document.getElementById("lab-closed-sec").style.display = "";
+      document.getElementById("lab-closed").innerHTML = lab.recent_closures.map(function (c) {
+        return '<div class="rowline"><b>' + c.id + "</b> · " + chip(c.state) + " · " + fmtDate(c.state_date) +
+          "<br>" + c.reason + "</div>";
+      }).join("");
+    }
+
+    var evRows = function (groups) {
+      return Object.keys(groups).map(function (k) {
+        var g = groups[k];
+        return '<div class="rowline"><b>' + k + "</b> · " + g.n + (g.n === 1 ? " ad" : " ads") + " · " +
+          g.wins + "W " + g.losses + "L " + g.meta_passed + "MP " + g.screening + " live · " +
+          money(g.spend, 0) + " · " + g.purchases + " purch</div>";
+      }).join("");
+    };
+    document.getElementById("lab-evidence").innerHTML =
+      "<div style='margin-top:6px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By angle</div>" + evRows(lab.evidence.by_angle) +
+      "<div style='margin-top:16px;font-size:11px;letter-spacing:2px;text-transform:uppercase'>By family</div>" + evRows(lab.evidence.by_family);
+
+    var pd = lab.predictions;
+    var readable = pd.scored_true + pd.scored_false;
+    document.getElementById("lab-preds").innerHTML =
+      "<b>" + pd.scored_true + " / " + readable + "</b> readable pre-registered predictions scored TRUE · " +
+      pd.unreadable + " unreadable (starved) · " + pd.pending + " pending";
+
+    document.getElementById("lab-footnote").textContent =
+      "Scored weekly before the Thursday readout; labels are candidates, not decisions; pauses, closes and budget moves are confirmed by Rick at the readout. " +
+      "Gates: " + lab.gates.floor.toLocaleString("en-GB") + " impression floor; pause only below " + lab.gates.pause_below_14d +
+      " 14d Meta ROAS; graduate ≥ " + lab.gates.graduate_meta + " Meta ≈ " + lab.gates.graduate_net + " Shopify-net. " +
+      "ver = Shopify last-click via utm (14d window, undercounts vs Meta view-through; truth sits between). net ~ = Meta ÷ 1.2 VAT estimate.";
+  }
+
+  function setView(v) {
+    document.getElementById("view-daily").style.display = v === "adslab" ? "none" : "";
+    document.getElementById("view-adslab").style.display = v === "adslab" ? "" : "none";
+    document.querySelectorAll("#page-tabs .tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.view === v);
+    });
+    try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
+  }
+  document.querySelectorAll("#page-tabs .tab").forEach(function (t) {
+    t.addEventListener("click", function () { setView(t.dataset.view); });
+  });
+  try { if (localStorage.getItem(VIEW_KEY) === "adslab") setView("adslab"); } catch (e) {}
 
   function drawSpark(series) {
     if (!series || series.length < 2) return;
@@ -414,6 +556,7 @@
       localStorage.setItem(STORE_KEY, password);
       render(data);
     } catch (e) {
+      console.error("unlock/render failed:", e); // render bugs otherwise masquerade as a wrong password
       localStorage.removeItem(STORE_KEY);
       if (!silent) errEl.textContent = "That's not it.";
       gate.classList.add("active");
