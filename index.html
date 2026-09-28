@@ -444,7 +444,7 @@
           var days = s.days_left;
           var outCls = days === null ? "" : days < 14 ? ' class="neg"' : days < 30 ? "" : ' class="pos"';
           var outTxt = days === null ? "—" : days === 0 ? "now" : fmtDate(s.out_date);
-          var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : "Hat — ") + s.variant;
+          var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : s.product.indexOf("Robe") >= 0 ? "Robe — " : "Hat — ") + s.variant;
           var inc = "—";
           if (s.incoming) {
             var eta = s.incoming.eta ? fmtDate(s.incoming.eta) : "in prod";
