@@ -194,6 +194,11 @@
         <div class="lab-list" id="lab-verdict" style="font-size:14px;color:var(--cream);line-height:1.7"></div>
       </section>
 
+      <section id="vid-sec" style="display:none">
+        <div class="sec-title">Video scripts <span class="sub" id="vid-sub"></span></div>
+        <div class="lab-list" id="vid-verdict" style="font-size:14px;color:var(--cream);line-height:1.7"></div>
+      </section>
+
       <div id="flags-box" style="display:none">
         <div class="n-title" id="flags-title">Decide on Thursday</div>
         <ul id="flags-list"></ul>
@@ -481,7 +486,7 @@
 
     document.querySelectorAll(".yday-h").forEach(function (h) { h.textContent = d.window_meta.yday.label; });
     drawSpark(d.series);
-    renderAdsLab(d.adslab);
+    renderAdsLab(d.adslab, d.scriptlab);
 
     // page tabs: only the views that have data this week
     var hasLab = !!d.adslab, hasSweep = !!(d.sweep_meta && d.sweep_meta.date);
@@ -501,18 +506,28 @@
 
   // ---------- ads lab tab ----------
   var VIEW_KEY = "cos-ledger-view";
-  function renderAdsLab(lab) {
+  function renderAdsLab(lab, vid) {
     if (!lab) return; // no scorer output yet: tab stays hidden
+    vid = vid || null;
+    if (vid) {
+      document.getElementById("vid-sec").style.display = "";
+      var c = vid.concentration;
+      document.getElementById("vid-sub").textContent = "main campaign, data through " + fmtDate(vid.data_until) +
+        (c ? " · top 5 ads take " + Math.round(c.top5_share_pct) + "% of spend" : "");
+      document.getElementById("vid-verdict").innerHTML = vid.verdict ? vid.verdict.text : "No video verdict written yet; the Thursday scorer adds it.";
+    }
 
     document.getElementById("lab-sub").textContent = "data through " + fmtDate(lab.data_until);
     document.getElementById("lab-verdict").innerHTML = lab.verdict
       ? lab.verdict.text
       : "No weekly verdict written yet; the Thursday scorer adds it.";
 
-    if (lab.flags && lab.flags.length) {
+    var allFlags = (lab.flags || []).map(function (f) { return "Statics · " + f.note; })
+      .concat(((vid && vid.flags) || []).map(function (f) { return "Video · " + f.note; }));
+    if (allFlags.length) {
       document.getElementById("flags-box").style.display = "block";
       document.getElementById("flags-list").innerHTML =
-        lab.flags.map(function (f, i) { return "<li>" + (i + 1) + " · " + f.note + "</li>"; }).join("");
+        allFlags.map(function (n, i) { return "<li>" + (i + 1) + " · " + n + "</li>"; }).join("");
     }
 
     var exps = lab.experiments || [];
@@ -529,12 +544,15 @@
     document.getElementById("lab-exp-next").innerHTML = exps.filter(function (e) { return e.status === "next"; }).map(expRow).join("") || '<div class="rowline">Queue empty.</div>';
     document.getElementById("lab-exp-done").innerHTML = exps.filter(function (e) { return e.status === "answered"; }).map(expRow).join("");
 
-    document.getElementById("lab-lessons").innerHTML = (lab.lessons || []).map(function (l) {
+    var lessons = (lab.lessons || []).concat(((vid && vid.lessons) || []).map(function (l) {
+      return { text: "Video: " + l.text + (l.status === "provisional" ? " <span style='color:var(--muted)'>(provisional)</span>" : ""), date: l.date };
+    }));
+    document.getElementById("lab-lessons").innerHTML = lessons.map(function (l) {
       return '<div class="rowline">' + l.text + ' <span style="color:var(--muted)">(' + fmtDate(l.date) + ")</span></div>";
     }).join("");
 
     document.getElementById("lab-footnote").textContent =
-      (lab.scope || "") + " Scored weekly before the Thursday readout; every proposal above needs Rick's confirm, nothing is automatic. " +
+      (lab.scope || "") + (vid ? " Video: CBO | Testing, same gates; hooks compared only within video-length bands." : "") + " Scored weekly before the Thursday readout; every proposal above needs Rick's confirm, nothing is automatic. " +
       "Full ad-level detail (every ad, evidence tables, prediction history) is generated locally at cult-of-sauna/ads-lab/detail.html on the studio machine and is not published.";
   }
 
