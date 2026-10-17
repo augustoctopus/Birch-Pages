@@ -197,6 +197,12 @@
       <section id="vid-sec" style="display:none">
         <div class="sec-title">Video scripts <span class="sub" id="vid-sub"></span></div>
         <div class="lab-list" id="vid-verdict" style="font-size:14px;color:var(--cream);line-height:1.7"></div>
+        <div class="lab-list" id="vid-pockets" style="display:none"></div>
+      </section>
+
+      <section id="mix-sec" style="display:none">
+        <div class="sec-title">Angle max <span class="sub">share of 14d spend by awareness stage · Meta ROAS</span></div>
+        <div class="lab-list" id="mix-body"></div>
       </section>
 
       <div id="flags-box" style="display:none">
@@ -515,6 +521,36 @@
       document.getElementById("vid-sub").textContent = "main campaign, data through " + fmtDate(vid.data_until) +
         (c ? " · top 5 ads take " + Math.round(c.top5_share_pct) + "% of spend" : "");
       document.getElementById("vid-verdict").innerHTML = vid.verdict ? vid.verdict.text : "No video verdict written yet; the Thursday scorer adds it.";
+      var pk = vid.pockets || [];
+      if (pk.length) {
+        var STATUS = { holding: "holding", growing: "growing", ceiling_watch: "topping out?", untested: "not enough spend to read" };
+        var r2 = function (x) { return x == null ? "·" : x.toFixed(2); };
+        var el = document.getElementById("vid-pockets");
+        el.style.display = "";
+        el.innerHTML = '<div class="rowline" style="color:var(--muted);font-size:12px">Messaging pockets: share of 14d spend, Meta ROAS 14d / 7d, Shopify-verified 14d</div>' +
+          pk.map(function (p) {
+            var shift = p.prev_share_pct == null ? "" : ' <span style="color:var(--muted)">(was ' + Math.round(p.prev_share_pct) + "%)</span>";
+            var col = p.status === "ceiling_watch" ? "var(--red)" : p.status === "growing" ? "var(--cream)" : "var(--muted)";
+            return '<div class="rowline"><span style="color:var(--cream);font-weight:600">' + p.angle + "</span> · " + Math.round(p.share_pct) + "%" + shift +
+              " · " + r2(p.d14_meta_roas) + " / " + r2(p.d7_meta_roas) + " · verified " + r2(p.d14_verified) +
+              " · " + p.n + " ads, " + p.new_14d + ' new · <span style="color:' + col + '">' + STATUS[p.status] + "</span></div>";
+          }).join("");
+      }
+    }
+
+    // Angle max (Rick 2026-10-16): creative liquidity counted in angles and awareness stages, not ads.
+    var mixes = [["Video", vid && vid.angle_mix], ["Statics", lab.angle_mix]].filter(function (m) { return m[1]; });
+    if (mixes.length) {
+      document.getElementById("mix-sec").style.display = "";
+      document.getElementById("mix-body").innerHTML = mixes.map(function (m) {
+        var x = m[1], a = x.angles || {};
+        var stages = (x.stages || []).map(function (s) {
+          return s.stage + " " + Math.round(s.share_pct || 0) + "% (" + (s.d14_meta_roas == null ? "·" : s.d14_meta_roas.toFixed(2)) + ")";
+        }).join(" · ");
+        var fresh = (a.new_28d || []).map(function (n) { return n.angle; }).join(", ");
+        return '<div class="rowline"><span style="color:var(--cream);font-weight:600">' + m[0] + "</span> · " + stages +
+          '<br><span style="color:var(--muted)">' + (a.carrying_spend || 0) + " of " + (a.live || 0) + " live angles carry 5%+ of spend · new angles, last 28d: " + (fresh || "none") + "</span></div>";
+      }).join("");
     }
 
     document.getElementById("lab-sub").textContent = "data through " + fmtDate(lab.data_until);
