@@ -134,6 +134,21 @@
 
   #spark { display: block; width: 100%; height: 56px; margin-top: 18px; }
 
+  /* ---------- weekly report tab ---------- */
+  #page-tabs { flex-wrap: wrap; }
+  #weekly-body .wk-stamp { text-align: center; font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-top: 18px; line-height: 1.6; }
+  #weekly-body .tabs { flex-wrap: wrap; justify-content: center; }
+  #weekly-body .tabs.left { justify-content: flex-start; }
+  #weekly-body .tab { padding: 7px 14px; letter-spacing: 2px; font-size: 10.5px; }
+  .wk-notes { margin-top: 26px; border: 1px solid var(--faint); border-radius: 12px; padding: 16px 18px; }
+  .wk-notes .n-title { font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); }
+  .wk-notes ul { margin: 10px 0 0 16px; }
+  .wk-notes li { font-size: 13.5px; line-height: 1.55; color: var(--cream); margin-top: 7px; }
+  .wk-table td { font-size: 14.5px; }
+  .wk-table td.label { font-size: 12px; }
+  .wk-table .sub { display: block; font-size: 10.5px; font-weight: 400; color: var(--muted); margin-top: 2px; letter-spacing: 0.3px; }
+  .wk-h { font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-top: 22px; }
+
   /* ---------- competitor ads tab ---------- */
   #sweep-body .headline { font-size: 14.5px; line-height: 1.65; color: var(--cream); margin-top: 22px; }
   .sweep-use { margin-top: 24px; border: 1px solid rgba(196,163,90,0.45); border-radius: 12px; padding: 16px 18px; }
@@ -182,6 +197,11 @@
       <button class="tab active" data-view="daily">Daily</button>
       <button class="tab" data-view="adslab" id="tab-adslab">Ads lab</button>
       <button class="tab" data-view="sweep" id="tab-sweep">Competitor ads</button>
+      <button class="tab" data-view="weekly" id="tab-weekly">Weekly</button>
+    </div>
+
+    <div id="view-weekly" style="display:none">
+      <div id="weekly-body"><div class="lab-list" style="margin-top:24px">Loading the weekly report…</div></div>
     </div>
 
     <div id="view-sweep" style="display:none">
@@ -495,14 +515,15 @@
     renderAdsLab(d.adslab, d.scriptlab);
 
     // page tabs: only the views that have data this week
-    var hasLab = !!d.adslab, hasSweep = !!(d.sweep_meta && d.sweep_meta.date);
+    var hasLab = !!d.adslab, hasSweep = !!(d.sweep_meta && d.sweep_meta.date), hasWeekly = !!(d.weekly_meta && d.weekly_meta.week_end);
     sweepDate = hasSweep ? d.sweep_meta.date : null;
     document.getElementById("tab-adslab").style.display = hasLab ? "" : "none";
     document.getElementById("tab-sweep").style.display = hasSweep ? "" : "none";
-    if (hasLab || hasSweep) document.getElementById("page-tabs").classList.add("on");
+    document.getElementById("tab-weekly").style.display = hasWeekly ? "" : "none";
+    if (hasLab || hasSweep || hasWeekly) document.getElementById("page-tabs").classList.add("on");
     try {
       var sv = localStorage.getItem(VIEW_KEY);
-      if ((sv === "adslab" && hasLab) || (sv === "sweep" && hasSweep)) setView(sv);
+      if ((sv === "adslab" && hasLab) || (sv === "sweep" && hasSweep) || (sv === "weekly" && hasWeekly)) setView(sv);
       else setView("daily");
     } catch (e) { setView("daily"); }
 
@@ -596,10 +617,12 @@
     document.getElementById("view-daily").style.display = v === "daily" ? "" : "none";
     document.getElementById("view-adslab").style.display = v === "adslab" ? "" : "none";
     document.getElementById("view-sweep").style.display = v === "sweep" ? "" : "none";
+    document.getElementById("view-weekly").style.display = v === "weekly" ? "" : "none";
     document.querySelectorAll("#page-tabs .tab").forEach(function (t) {
       t.classList.toggle("active", t.dataset.view === v);
     });
     if (v === "sweep") loadSweep();
+    if (v === "weekly") loadWeekly();
     try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
   }
   document.querySelectorAll("#page-tabs .tab").forEach(function (t) {
@@ -624,6 +647,204 @@
         document.getElementById("sweep-body").innerHTML =
           '<div class="lab-list" style="margin-top:24px">Could not load this week\'s sweep. Pull to refresh, or check back after Thursday\'s run.</div>';
       });
+  }
+
+
+  // ---------- weekly report tab (Rick 2026-10-24; fetched + decrypted on first open) ----------
+  var weeklyState = "idle", WK = null, wkMode = "week", wkPage = "Hat", wkCountry = "All";
+  function loadWeekly() {
+    if (weeklyState !== "idle") return;
+    var pw = null;
+    try { pw = localStorage.getItem(STORE_KEY); } catch (e) {}
+    if (!pw) return;
+    weeklyState = "loading";
+    fetch("weekly.enc.json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("fetch " + r.status); return r.json(); })
+      .then(function (j) { return decryptWith(j, pw); })
+      .then(function (w) { weeklyState = "done"; WK = w; renderWeekly(); })
+      .catch(function (e) {
+        console.error("weekly load failed:", e);
+        weeklyState = "idle";
+        document.getElementById("weekly-body").innerHTML =
+          '<div class="lab-list" style="margin-top:24px">Could not load the weekly report. Pull to refresh, or check back after Sunday\'s run.</div>';
+      });
+  }
+
+  function wkFmt(v, fmt) {
+    if (v === null || v === undefined) return "—";
+    if (fmt === "money") return money(v, 0);
+    if (fmt === "money2") return money(v, 2);
+    if (fmt === "pct") return v.toFixed(1) + "%";
+    if (fmt === "x") return v.toFixed(2) + "×";
+    if (fmt === "dec") return v.toFixed(2);
+    return num(Math.round(v));
+  }
+  // rates move in points, everything else in %
+  function wkDelta(cur, prev, fmt, goodUp) {
+    if (cur === null || cur === undefined || prev === null || prev === undefined) return '<span class="delta">&nbsp;</span>';
+    var diff, txt;
+    if (fmt === "pct") { diff = cur - prev; txt = Math.abs(diff).toFixed(1) + "pt"; }
+    else { if (!prev) return '<span class="delta">&nbsp;</span>'; diff = (cur - prev) / Math.abs(prev) * 100; txt = Math.abs(diff).toFixed(0) + "%"; }
+    if (!isFinite(diff)) return '<span class="delta">&nbsp;</span>';
+    if (Math.abs(diff) < 0.05) return '<span class="delta">flat</span>';
+    var up = diff > 0, good = goodUp === null || goodUp === undefined ? null : up === goodUp;
+    return '<span class="delta' + (good === null ? "" : good ? " up" : " down") + '">' + (up ? "▲ " : "▼ ") + txt + "</span>";
+  }
+  function wkKeys() { return wkMode === "week" ? ["week", "prev_week"] : ["mtd", "prev_mtd"]; }
+  function wkRange(p) { return fmtDate(p.start) + " to " + fmtDate(p.end); }
+  // one table row: label, now, prev, delta
+  function wkRow(label, values, fmt, goodUp, sub) {
+    var k = wkKeys(), cur = values[k[0]], prev = values[k[1]];
+    return '<tr><td class="label">' + label + (sub ? '<span class="sub">' + sub + "</span>" : "") + "</td><td>" + wkFmt(cur, fmt) +
+      "</td><td style=\"color:var(--muted);font-weight:400\">" + wkFmt(prev, fmt) + "</td><td>" + wkDelta(cur, prev, fmt, goodUp) + "</td></tr>";
+  }
+  function wkTable(rows) {
+    var k = wkKeys();
+    var h = wkMode === "week" ? ["This week", "Last week"] : ["MTD", "Last month"];
+    return '<table class="wk-table"><thead><tr><th></th><th>' + h[0] + "</th><th>" + h[1] + "</th><th>Change</th></tr></thead><tbody>" + rows.join("") + "</tbody></table>";
+  }
+  function pick(obj, field) { var o = {}; Object.keys(obj).forEach(function (p) { o[p] = obj[p] ? obj[p][field] : null; }); return o; }
+  function wkTabs(id, items, active, cls) {
+    return '<div class="tabs ' + (cls || "") + '" id="' + id + '">' + items.map(function (it) {
+      return '<button class="tab' + (it === active ? " active" : "") + '" data-v="' + it + '">' + it + "</button>";
+    }).join("") + "</div>";
+  }
+
+  function renderWeekly() {
+    var w = WK, P = w.periods, k = wkKeys();
+    var html = [];
+    html.push('<div class="wk-stamp">' + (wkMode === "week"
+      ? "Week " + wkRange(P.week) + " vs " + wkRange(P.prev_week)
+      : "Month to date " + wkRange(P.mtd) + " vs " + wkRange(P.prev_mtd)) + "<br>Built " + w.generated + " UK</div>");
+    html.push(wkTabs("wk-mode", ["Week", "MTD"], wkMode === "week" ? "Week" : "MTD"));
+
+    if (w.notes && w.notes.length)
+      html.push('<div class="wk-notes"><div class="n-title">What changed</div><ul>' + w.notes.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul></div>");
+
+    // headline
+    html.push('<section><div class="sec-title">Headline</div>' + wkTable(w.headline.map(function (m) {
+      return wkRow(m.label, m.values, m.fmt, m.good_up);
+    })) + "</section>");
+
+    // funnel
+    var pages = [];
+    w.funnel.pages.forEach(function (f) { if (pages.indexOf(f.page) < 0) pages.push(f.page); });
+    if (pages.indexOf(wkPage) < 0) wkPage = pages[0];
+    var f = w.funnel.pages.filter(function (x) { return x.page === wkPage && x.country === wkCountry; })[0];
+    var frows = [];
+    if (f) {
+      var V = f.values;
+      frows.push(wkRow("Sessions", pick(V, "sessions"), "int", true));
+      frows.push(wkRow("Added to cart", pick(V, "atc_rate"), "pct", true, num(V[k[0]].cart) + " sessions"));
+      frows.push(wkRow("Reached checkout", pick(V, "checkout_rate"), "pct", true, num(V[k[0]].checkout) + " · % of carts"));
+      frows.push(wkRow("Purchased", pick(V, "purchase_rate"), "pct", true, num(V[k[0]].completed) + " · % of checkouts"));
+      frows.push(wkRow("Session conversion", pick(V, "cvr"), "pct", true, "sessions to purchase"));
+    }
+    html.push('<section><div class="sec-title">Funnel <span class="sub">by landing page</span></div>' +
+      wkTabs("wk-page", pages, wkPage, "left") + wkTabs("wk-country", ["All", "US", "UK"], wkCountry, "left") +
+      (f ? wkTable(frows) : '<div class="lab-list">No sessions landed here in this window.</div>'));
+    var dimRow = function (d) {
+      var V = d.values;
+      return wkRow(d.key, pick(V, "cvr"), "pct", true, num(V[k[0]].sessions) + " sessions · ATC " + wkFmt(V[k[0]].atc_rate, "pct"));
+    };
+    ["source", "device"].forEach(function (dim) {
+      var ds = w.funnel.dims.filter(function (d) { return d.dim === dim; });
+      if (ds.length) html.push('<div class="wk-h">Sitewide conversion by ' + dim + "</div>" + wkTable(ds.map(dimRow)));
+    });
+    html.push("</section>");
+
+    // ad spend
+    var A = w.ads, arows = A.campaigns.map(function (c) {
+      var V = c.values, cur = V[k[0]] || {};
+      return wkRow(c.campaign, pick(V, "spend"), "money", null, "Meta ROAS " + wkFmt(cur.roas, "x") + " (was " + wkFmt((V[k[1]] || {}).roas, "x") +
+        ") · CPA " + wkFmt(cur.cpa, "money2") + " · " + wkFmt(cur.share, "pct") + " of Meta");
+    });
+    if (A.google) {
+      var G = A.google.values, gc = G[k[0]] || {};
+      arows.push(wkRow("Google", pick(G, "spend"), "money", null, "CPA " + wkFmt(gc.cpa, "money2") + " · brand " + wkFmt(gc.brand_spend, "money")));
+    }
+    html.push('<section><div class="sec-title">Ad spend</div>' + wkTable(arows));
+    if (A.pockets && A.pockets.week && A.pockets.week.length) {
+      var prevP = {};
+      (A.pockets.prev_week || []).forEach(function (p) { prevP[p.angle] = p; });
+      html.push('<div class="wk-h">Messaging pockets · Meta, this week vs last</div><div class="lab-list">' + A.pockets.week.map(function (p) {
+        var was = prevP[p.angle];
+        return '<div class="rowline"><span style="color:var(--cream);font-weight:600">' + p.angle + "</span> · " + money(p.spend, 0) + " · " +
+          wkFmt(p.share, "pct") + (was ? ' <span style="color:var(--muted)">(was ' + wkFmt(was.share, "pct") + ")</span>" : ' <span style="color:var(--muted)">(new)</span>') +
+          " · ROAS " + wkFmt(p.roas, "x") + (was ? ' <span style="color:var(--muted)">(was ' + wkFmt(was.roas, "x") + ")</span>" : "") +
+          " · " + p.ads + " ads, top " + p.top_ad + " " + wkFmt(p.top_ad_share, "pct") + "</div>";
+      }).join("") + "</div>");
+    }
+    if (A.new_ads) {
+      var nr = Object.keys(A.new_ads).map(function (lane) { return wkRow("New " + lane + " ads launched", A.new_ads[lane], "int", true); });
+      html.push(wkTable(nr));
+    }
+    html.push("</section>");
+
+    // attribution
+    var T = w.attribution;
+    var grp = function (rows) {
+      return wkTable(rows.map(function (r) {
+        var V = r.values, cur = V[k[0]] || {};
+        return wkRow(r.key, pick(V, "sales"), "money", true, num(cur.orders) + " orders · " + wkFmt(cur.share, "pct") + " of sales · AOV " + wkFmt(cur.aov, "money2"));
+      }));
+    };
+    html.push('<section><div class="sec-title">Sales attribution <span class="sub">Shopify last click</span></div>' + grp(T.channels) +
+      '<div class="wk-h">New vs returning</div>' + grp(T.customer) + '<div class="wk-h">Market</div>' + grp(T.country));
+    var xr = [];
+    if (T.email) {
+      var E = T.email.values;
+      xr.push(wkRow("Email revenue (Klaviyo)", pick(E, "revenue"), "money", true, num((E[k[0]] || {}).orders) + " orders · " + wkFmt((E[k[0]] || {}).share, "pct") + " of sales"));
+      xr.push(wkRow("New email subscribers", pick(E, "new_subscribers"), "int", true));
+    }
+    var M = T.meta_vs_shopify.values;
+    xr.push(wkRow("Meta-reported revenue", pick(M, "meta_value"), "money", true, num((M[k[0]] || {}).meta_purchases) + " purchases · Shopify social " + wkFmt((M[k[0]] || {}).shopify_social_sales, "money")));
+    html.push('<div class="wk-h">Email and Meta</div>' + wkTable(xr) + "</section>");
+
+    // units + attach + sets
+    var U = w.units, at = U.attach;
+    var urows = U.products.map(function (p) {
+      return wkRow(p.label, pick(p.values, "units"), "int", true, wkFmt((p.values[k[0]] || {}).sales, "money") + " sales");
+    });
+    var aRow = function (label, field, fmt) { return wkRow(label, pick(at, field), fmt || "pct", true); };
+    html.push('<section><div class="sec-title">Units and attach</div>' + wkTable(urows) +
+      '<div class="wk-h">Attach rates</div>' + wkTable([
+        aRow("Towel on hat orders", "towel_on_hat"), aRow("Robe on hat orders", "robe_on_hat"),
+        aRow("Hat on towel orders", "hat_on_towel"), aRow("Robe on towel orders", "robe_on_towel"),
+        aRow("Hat on robe orders", "hat_on_robe"), aRow("Towel on robe orders", "towel_on_robe"),
+        aRow("Orders with 2+ products", "multi_product"), aRow("Hat orders with 2+ hats", "hat_2plus"),
+        aRow("Hat orders with 3+ hats", "hat_3plus"), aRow("Hats per hat order", "hats_per_hat_order", "dec"),
+        aRow("Towel orders with 2+ towels", "towel_2plus")]) +
+      '<div class="wk-h">Ritual Sets</div>' + wkTable([
+        aRow("Sets sold", "ritual_sets", "int"), aRow("Orders with a full set", "ritual_set_orders", "int"),
+        aRow("Set order sales", "ritual_set_sales", "money"), aRow("Share of sales", "ritual_set_share_of_sales")]) +
+      '<div class="wk-h">Order mix</div>' + wkTable(U.mix.map(function (m) {
+        return wkRow(m.key, pick(m.values, "orders"), "int", null, wkFmt((m.values[k[0]] || {}).share, "pct") + " of orders · " + wkFmt((m.values[k[0]] || {}).sales, "money"));
+      })));
+    if (U.variants && U.variants.length) {
+      var prods = [];
+      U.variants.forEach(function (v) { if (prods.indexOf(v.product) < 0) prods.push(v.product); });
+      prods.forEach(function (pr) {
+        var vs = U.variants.filter(function (v) { return v.product === pr; })
+          .sort(function (a, b) { return ((b.values[k[0]] || {}).units || 0) - ((a.values[k[0]] || {}).units || 0); });
+        html.push('<div class="wk-h">' + pr + " by variant</div>" + wkTable(vs.map(function (v) {
+          return wkRow(v.variant, pick(v.values, "units"), "int", true, wkFmt((v.values[k[0]] || {}).sales, "money"));
+        })));
+      });
+    }
+    html.push("</section>");
+
+    html.push('<div class="footnote">' + (w.caveats || []).join(" ") + " Week = Sunday to Saturday, UK store days. MTD compares the same day numbers of last month.</div>");
+    var body = document.getElementById("weekly-body");
+    body.innerHTML = html.join("");
+    var bind = function (id, fn) {
+      body.querySelectorAll("#" + id + " .tab").forEach(function (t) {
+        t.addEventListener("click", function () { fn(t.dataset.v); renderWeekly(); });
+      });
+    };
+    bind("wk-mode", function (v) { wkMode = v === "Week" ? "week" : "mtd"; });
+    bind("wk-page", function (v) { wkPage = v; });
+    bind("wk-country", function (v) { wkCountry = v; });
   }
 
   function renderSweep(s) {
