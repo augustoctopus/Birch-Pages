@@ -134,20 +134,83 @@
 
   #spark { display: block; width: 100%; height: 56px; margin-top: 18px; }
 
-  /* ---------- weekly report tab ---------- */
+  /* ---------- weekly report tab (redesigned 2026-10-24: Rick found the first cut hard to read) ---------- */
   #page-tabs { flex-wrap: wrap; }
-  #weekly-body .wk-stamp { text-align: center; font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-top: 18px; line-height: 1.6; }
-  #weekly-body .tabs { flex-wrap: wrap; justify-content: center; }
-  #weekly-body .tabs.left { justify-content: flex-start; }
-  #weekly-body .tab { padding: 7px 14px; letter-spacing: 2px; font-size: 10.5px; }
-  .wk-notes { margin-top: 26px; border: 1px solid var(--faint); border-radius: 12px; padding: 16px 18px; }
-  .wk-notes .n-title { font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); }
-  .wk-notes ul { margin: 10px 0 0 16px; }
-  .wk-notes li { font-size: 13.5px; line-height: 1.55; color: var(--cream); margin-top: 7px; }
-  .wk-table td { font-size: 14.5px; }
-  .wk-table td.label { font-size: 12px; }
-  .wk-table .sub { display: block; font-size: 10.5px; font-weight: 400; color: var(--muted); margin-top: 2px; letter-spacing: 0.3px; }
-  .wk-h { font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-top: 22px; }
+  body.wide .wrap { max-width: 1080px; }
+  #weekly-body { --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c-other: rgba(244,238,228,0.35); --bar: #C4A35A; }
+  .wk-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 30px; }
+  .wk-period { font-family: var(--serif); font-size: 26px; font-weight: 500; line-height: 1.2; }
+  .wk-vs { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .seg { display: inline-flex; border: 1px solid var(--faint); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg button { background: none; border: none; color: var(--muted); font-family: var(--sans); font-size: 13px; font-weight: 500;
+    padding: 7px 16px; border-radius: 999px; cursor: pointer; }
+  .seg button.on { background: var(--amber); color: var(--ink); }
+  .wk-notes { margin-top: 24px; border: 1px solid rgba(196,163,90,0.45); border-radius: 14px; padding: 18px 22px; }
+  .wk-notes h3 { font-size: 13px; font-weight: 600; color: var(--amber); }
+  .wk-notes ul { margin: 8px 0 0 18px; }
+  .wk-notes li { font-size: 15px; line-height: 1.6; color: var(--cream); margin-top: 6px; }
+  .wk-sec { margin-top: 48px; }
+  .wk-sec > h2 { font-family: var(--serif); font-size: 25px; font-weight: 500; color: var(--cream); }
+  .wk-sec > .wk-sub { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 4px; }
+  .wk-h3 { font-size: 13px; font-weight: 600; color: var(--cream); margin-top: 26px; }
+  .wk-h3 span { font-weight: 400; color: var(--muted); }
+  .kpi-group { margin-top: 18px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+  .kpi { border: 1px solid var(--faint); border-radius: 12px; padding: 14px 16px 13px; background: rgba(244,238,228,0.025); min-width: 0; }
+  .kpi-l { font-size: 12.5px; color: var(--muted); line-height: 1.3; }
+  .kpi-v { font-size: 27px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+  .kpi-d { font-size: 12px; margin-top: 6px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+  .dlt { font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .dlt.up { color: var(--green); }
+  .dlt.down { color: var(--red); }
+  .dlt.flat { color: var(--muted); font-weight: 500; }
+  .tscroll { overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
+  table.wk { width: 100%; border-collapse: collapse; }
+  table.wk.many { min-width: 600px; }
+  table.wk th { font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); text-align: right;
+    padding: 8px 10px; width: auto; vertical-align: bottom; line-height: 1.3; border-bottom: 1px solid var(--faint); }
+  table.wk th small { display: block; font-weight: 400; font-size: 11px; opacity: 0.8; }
+  table.wk th:first-child, table.wk td:first-child { text-align: left; padding-left: 0; }
+  table.wk td { font-size: 15px; font-weight: 600; text-align: right; padding: 11px 10px; border-top: 1px solid var(--faint);
+    font-variant-numeric: tabular-nums; vertical-align: top; }
+  table.wk tr:first-child td { border-top: none; }
+  table.wk td:first-child { font-size: 14px; font-weight: 500; color: var(--cream); }
+  table.wk td .d { display: block; font-size: 11.5px; margin-top: 3px; }
+  table.wk td .muted { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+  .wk-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .bars { margin-top: 12px; }
+  .bar-row { display: grid; grid-template-columns: 190px minmax(0, 1fr) 210px; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--faint); }
+  .bar-row:first-child { border-top: none; }
+  .bar-l { font-size: 14px; font-weight: 500; line-height: 1.3; }
+  .bar-l small { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .bar-track { position: relative; height: 14px; }
+  .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .bar-fill.young { background: rgba(196,163,90,0.45); }
+  .bar-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--cream); opacity: 0.7; border-radius: 1px; }
+  .bar-v { font-size: 14px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; line-height: 1.35; }
+  .bar-v small { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .bar-v .warn { color: var(--red); font-weight: 600; }
+  .bar-key { font-size: 12px; color: var(--muted); margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .bar-key i { display: inline-block; width: 14px; height: 10px; border-radius: 0 3px 3px 0; background: var(--bar); vertical-align: middle; margin-right: 6px; }
+  .bar-key i.tick { width: 2px; height: 14px; background: var(--cream); opacity: 0.7; border-radius: 1px; }
+  .stack-row { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 10px; }
+  .stack-row span { font-size: 13px; color: var(--muted); }
+  .stack { display: flex; gap: 2px; height: 28px; }
+  .stack div { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; overflow: hidden; white-space: nowrap; }
+  .stack div:first-child { border-radius: 4px 0 0 4px; }
+  .stack div:last-child { border-radius: 0 4px 4px 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 13px; color: var(--cream); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; vertical-align: -1px; }
+  .wk-foot { font-size: 12px; line-height: 1.65; color: var(--muted); margin-top: 52px; border-top: 1px solid var(--faint); padding-top: 16px; }
+  .wk-foot p { margin-top: 6px; }
+  @media (max-width: 760px) {
+    .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi-v { font-size: 23px; }
+    .wk-2col { grid-template-columns: 1fr; gap: 0; }
+    .bar-row { grid-template-columns: 1fr auto; gap: 6px 12px; }
+    .bar-row .bar-track { grid-column: 1 / -1; grid-row: 2; }
+    .wk-period { font-size: 22px; }
+  }
 
   /* ---------- competitor ads tab ---------- */
   #sweep-body .headline { font-size: 14.5px; line-height: 1.65; color: var(--cream); margin-top: 22px; }
@@ -618,6 +681,7 @@
     document.getElementById("view-adslab").style.display = v === "adslab" ? "" : "none";
     document.getElementById("view-sweep").style.display = v === "sweep" ? "" : "none";
     document.getElementById("view-weekly").style.display = v === "weekly" ? "" : "none";
+    document.body.classList.toggle("wide", v === "weekly");
     document.querySelectorAll("#page-tabs .tab").forEach(function (t) {
       t.classList.toggle("active", t.dataset.view === v);
     });
@@ -651,7 +715,8 @@
 
 
   // ---------- weekly report tab (Rick 2026-10-24; fetched + decrypted on first open) ----------
-  var weeklyState = "idle", WK = null, wkMode = "week", wkPage = "Hat", wkCountry = "All";
+  // Redesigned same day for readability: scorecard tiles, one funnel table across products, bar charts.
+  var weeklyState = "idle", WK = null, wkMode = "week", wkCountry = "All";
   function loadWeekly() {
     if (weeklyState !== "idle") return;
     var pw = null;
@@ -670,6 +735,7 @@
       });
   }
 
+  function esc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function wkFmt(v, fmt) {
     if (v === null || v === undefined) return "—";
     if (fmt === "money") return money(v, 0);
@@ -679,172 +745,230 @@
     if (fmt === "dec") return v.toFixed(2);
     return num(Math.round(v));
   }
-  // rates move in points, everything else in %
+  // rates move in points, everything else in %; arrow + text so colour never carries it alone
   function wkDelta(cur, prev, fmt, goodUp) {
-    if (cur === null || cur === undefined || prev === null || prev === undefined) return '<span class="delta">&nbsp;</span>';
+    if (cur === null || cur === undefined || prev === null || prev === undefined) return "";
     var diff, txt;
-    if (fmt === "pct") { diff = cur - prev; txt = Math.abs(diff).toFixed(1) + "pt"; }
-    else { if (!prev) return '<span class="delta">&nbsp;</span>'; diff = (cur - prev) / Math.abs(prev) * 100; txt = Math.abs(diff).toFixed(0) + "%"; }
-    if (!isFinite(diff)) return '<span class="delta">&nbsp;</span>';
-    if (Math.abs(diff) < 0.05) return '<span class="delta">flat</span>';
+    if (fmt === "int" && prev < 20) return '<span class="dlt flat">was ' + num(Math.round(prev)) + "</span>";
+    if (fmt === "pct") { diff = cur - prev; txt = Math.abs(diff).toFixed(1) + " pts"; }
+    else { if (!prev) return ""; diff = (cur - prev) / Math.abs(prev) * 100; txt = Math.abs(diff).toFixed(0) + "%"; }
+    if (!isFinite(diff)) return "";
+    if (Math.abs(diff) < 0.05) return '<span class="dlt flat">no change</span>';
     var up = diff > 0, good = goodUp === null || goodUp === undefined ? null : up === goodUp;
-    return '<span class="delta' + (good === null ? "" : good ? " up" : " down") + '">' + (up ? "▲ " : "▼ ") + txt + "</span>";
+    return '<span class="dlt ' + (good === null ? "flat" : good ? "up" : "down") + '">' + (up ? "▲ " : "▼ ") + txt + "</span>";
   }
   function wkKeys() { return wkMode === "week" ? ["week", "prev_week"] : ["mtd", "prev_mtd"]; }
+  function prevName() { return wkMode === "week" ? "last week" : "same days last month"; }
   function wkRange(p) { return fmtDate(p.start) + " to " + fmtDate(p.end); }
-  // one table row: label, now, prev, delta
-  function wkRow(label, values, fmt, goodUp, sub) {
-    var k = wkKeys(), cur = values[k[0]], prev = values[k[1]];
-    return '<tr><td class="label">' + label + (sub ? '<span class="sub">' + sub + "</span>" : "") + "</td><td>" + wkFmt(cur, fmt) +
-      "</td><td style=\"color:var(--muted);font-weight:400\">" + wkFmt(prev, fmt) + "</td><td>" + wkDelta(cur, prev, fmt, goodUp) + "</td></tr>";
-  }
-  function wkTable(rows) {
-    var k = wkKeys();
-    var h = wkMode === "week" ? ["This week", "Last week"] : ["MTD", "Last month"];
-    return '<table class="wk-table"><thead><tr><th></th><th>' + h[0] + "</th><th>" + h[1] + "</th><th>Change</th></tr></thead><tbody>" + rows.join("") + "</tbody></table>";
-  }
   function pick(obj, field) { var o = {}; Object.keys(obj).forEach(function (p) { o[p] = obj[p] ? obj[p][field] : null; }); return o; }
-  function wkTabs(id, items, active, cls) {
-    return '<div class="tabs ' + (cls || "") + '" id="' + id + '">' + items.map(function (it) {
-      return '<button class="tab' + (it === active ? " active" : "") + '" data-v="' + it + '">' + it + "</button>";
+
+  function kpi(label, values, fmt, goodUp, note) {
+    var k = wkKeys(), cur = values[k[0]], prev = values[k[1]];
+    var d = wkDelta(cur, prev, fmt, goodUp);
+    if (d.indexOf(">was ") >= 0) note = note === undefined ? "" : note;
+    return '<div class="kpi"><div class="kpi-l">' + label + '</div><div class="kpi-v">' + wkFmt(cur, fmt) + '</div><div class="kpi-d">' +
+      d + (note !== undefined ? "<span>" + note + "</span>" : prev === null || prev === undefined ? "" : "<span>vs " + wkFmt(prev, fmt) + "</span>") + "</div></div>";
+  }
+  function kpiGroup(title, tiles) {
+    return '<div class="kpi-group"><div class="wk-h3">' + title + '</div><div class="kpi-grid">' + tiles.join("") + "</div></div>";
+  }
+  // a table where every cell shows this period's value with its change underneath
+  function cmpTable(headers, rows) {
+    var k = wkKeys();
+    var head = "<tr>" + headers.map(function (h) { return "<th>" + h + "</th>"; }).join("") + "</tr>";
+    var body = rows.map(function (r) {
+      return "<tr><td>" + r.label + (r.sub ? '<span class="muted">' + r.sub + "</span>" : "") + "</td>" + r.cells.map(function (c) {
+        if (!c) return "<td>—</td>";
+        var cur = c.values[k[0]], prev = c.values[k[1]];
+        return "<td>" + wkFmt(cur, c.fmt) + '<span class="d">' + (wkDelta(cur, prev, c.fmt, c.good) || "&nbsp;") + "</span></td>";
+      }).join("") + "</tr>";
+    }).join("");
+    return '<div class="tscroll"><table class="wk' + (headers.length >= 5 ? " many" : "") + '"><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div>";
+  }
+  // horizontal bars: single series, previous period as a tick
+  function barRows(items, max) {
+    max = max || Math.max.apply(null, items.map(function (i) { return Math.max(i.v || 0, i.prev || 0); })) || 1;
+    return '<div class="bars">' + items.map(function (i) {
+      var w = Math.max(0, (i.v || 0) / max * 100), t = i.prev === null || i.prev === undefined ? null : i.prev / max * 100;
+      return '<div class="bar-row" title="' + esc(i.title || "") + '"><div class="bar-l">' + i.label + (i.sub ? "<small>" + i.sub + "</small>" : "") +
+        '</div><div class="bar-track"><div class="bar-fill' + (i.young ? " young" : "") + '" style="width:' + w.toFixed(1) + '%"></div>' +
+        (t === null ? "" : '<div class="bar-tick" style="left:calc(' + t.toFixed(1) + '% - 1px)"></div>') +
+        '</div><div class="bar-v">' + i.value + (i.valueSub ? "<small>" + i.valueSub + "</small>" : "") + "</div></div>";
     }).join("") + "</div>";
+  }
+  function barKey(prevLabel) {
+    return '<div class="bar-key"><span><i></i>' + (wkMode === "week" ? "this week" : "month to date") + '</span><span><i class="tick"></i>' + prevLabel + "</span></div>";
   }
 
   function renderWeekly() {
-    var w = WK, P = w.periods, k = wkKeys();
+    var w = WK, P = w.periods, k = wkKeys(), H = {};
+    w.headline.forEach(function (m) { H[m.key] = m; });
+    var hk = function (key, label) { var m = H[key]; return m ? kpi(label || m.label, m.values, m.fmt, m.good_up) : ""; };
+    var U = w.units, at = U.attach, R = w.repeat || null, A = w.ads, T = w.attribution;
     var html = [];
-    html.push('<div class="wk-stamp">' + (wkMode === "week"
-      ? "Week " + wkRange(P.week) + " vs " + wkRange(P.prev_week)
-      : "Month to date " + wkRange(P.mtd) + " vs " + wkRange(P.prev_mtd)) + "<br>Built " + w.generated + " UK</div>");
-    html.push(wkTabs("wk-mode", ["Week", "MTD"], wkMode === "week" ? "Week" : "MTD"));
+
+    html.push('<div class="wk-top"><div><div class="wk-period">' + (wkMode === "week" ? "Week of " + wkRange(P.week) : "Month to date, " + wkRange(P.mtd)) +
+      '</div><div class="wk-vs">Compared with ' + (wkMode === "week" ? "the week of " + wkRange(P.prev_week) : wkRange(P.prev_mtd)) + ". Built " + esc(w.generated) + " UK.</div></div>" +
+      '<div class="seg" id="wk-mode"><button data-v="week"' + (wkMode === "week" ? ' class="on"' : "") + '>This week</button><button data-v="mtd"' +
+      (wkMode === "mtd" ? ' class="on"' : "") + ">Month to date</button></div></div>");
 
     if (w.notes && w.notes.length)
-      html.push('<div class="wk-notes"><div class="n-title">What changed</div><ul>' + w.notes.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul></div>");
+      html.push('<div class="wk-notes"><h3>What changed this week</h3><ul>' + w.notes.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul></div>");
 
-    // headline
-    html.push('<section><div class="sec-title">Headline</div>' + wkTable(w.headline.map(function (m) {
-      return wkRow(m.label, m.values, m.fmt, m.good_up);
-    })) + "</section>");
+    // scorecard
+    var rl = R && R.lifetime;
+    html.push('<div class="wk-sec"><h2>Scorecard</h2><div class="wk-sub">Each tile shows ' + (wkMode === "week" ? "this week" : "month to date") +
+      ", the change, and the figure for " + prevName() + ".</div>" +
+      kpiGroup("Sales", [hk("sales"), hk("orders"), hk("aov"), hk("rps")]) +
+      kpiGroup("Spend", [hk("spend"), hk("spend_share", "Spend as % of sales"), hk("mer"), hk("cpa")]) +
+      kpiGroup("Traffic and conversion", [hk("sessions", "Sessions"), hk("cvr", "Conversion rate"), hk("ncpa"), hk("disc_rate")]) +
+      kpiGroup("Basket", [hk("units"), hk("upo"), kpi("Hat orders with 2+ hats", pick(at, "hat_2plus"), "pct", true), kpi("Ritual Sets sold", pick(at, "ritual_sets"), "int", true)]) +
+      kpiGroup("Customers", [hk("returning_share", "Orders from returning customers"),
+        R ? kpi("Revenue from returning customers", pick(R.period, "sales_share"), "pct", true) : "",
+        rl ? kpi("Repeat rate, all customers", { week: rl.rate, prev_week: rl.prev_rate, mtd: rl.rate, prev_mtd: null }, "pct", true,
+          num(rl.repeaters) + " of " + num(rl.customers) + " have ordered 2+ times") : "",
+        hk("free_orders")]) + "</div>");
 
     // funnel
-    var pages = [];
-    w.funnel.pages.forEach(function (f) { if (pages.indexOf(f.page) < 0) pages.push(f.page); });
-    if (pages.indexOf(wkPage) < 0) wkPage = pages[0];
-    var f = w.funnel.pages.filter(function (x) { return x.page === wkPage && x.country === wkCountry; })[0];
-    var frows = [];
-    if (f) {
-      var V = f.values;
-      frows.push(wkRow("Sessions", pick(V, "sessions"), "int", true));
-      frows.push(wkRow("Added to cart", pick(V, "atc_rate"), "pct", true, num(V[k[0]].cart) + " sessions"));
-      frows.push(wkRow("Reached checkout", pick(V, "checkout_rate"), "pct", true, num(V[k[0]].checkout) + " · % of carts"));
-      frows.push(wkRow("Purchased", pick(V, "purchase_rate"), "pct", true, num(V[k[0]].completed) + " · % of checkouts"));
-      frows.push(wkRow("Session conversion", pick(V, "cvr"), "pct", true, "sessions to purchase"));
-    }
-    html.push('<section><div class="sec-title">Funnel <span class="sub">by landing page</span></div>' +
-      wkTabs("wk-page", pages, wkPage, "left") + wkTabs("wk-country", ["All", "US", "UK"], wkCountry, "left") +
-      (f ? wkTable(frows) : '<div class="lab-list">No sessions landed here in this window.</div>'));
-    var dimRow = function (d) {
-      var V = d.values;
-      return wkRow(d.key, pick(V, "cvr"), "pct", true, num(V[k[0]].sessions) + " sessions · ATC " + wkFmt(V[k[0]].atc_rate, "pct"));
+    var fr = w.funnel.pages.filter(function (f) { return f.country === wkCountry && f.page !== "Other"; });
+    var fcells = function (V) {
+      return [{ values: pick(V, "sessions"), fmt: "int", good: true }, { values: pick(V, "atc_rate"), fmt: "pct", good: true },
+        { values: pick(V, "checkout_rate"), fmt: "pct", good: true }, { values: pick(V, "purchase_rate"), fmt: "pct", good: true },
+        { values: pick(V, "cvr"), fmt: "pct", good: true }];
     };
+    var fhead = ["", "Sessions", "Added to cart<small>% of sessions</small>", "Reached checkout<small>% of carts</small>",
+      "Purchased<small>% of checkouts</small>", "Conversion<small>sessions to purchase</small>"];
+    html.push('<div class="wk-sec"><h2>Funnel by product</h2><div class="wk-sub">Sessions that landed on each page and how far they got. ' +
+      "Changes in rates are percentage points. UK sessions are undercounted (cookie banner).</div>" +
+      '<div class="seg" id="wk-country" style="margin-top:14px">' + ["All", "US", "UK"].map(function (c) {
+        return '<button data-v="' + c + '"' + (c === wkCountry ? ' class="on"' : "") + ">" + (c === "All" ? "All markets" : c) + "</button>";
+      }).join("") + "</div>" +
+      cmpTable(fhead, fr.map(function (f) {
+        return { label: f.page, sub: num(f.values[k[0]].completed) + " orders", cells: fcells(f.values) };
+      })));
     ["source", "device"].forEach(function (dim) {
-      var ds = w.funnel.dims.filter(function (d) { return d.dim === dim; });
-      if (ds.length) html.push('<div class="wk-h">Sitewide conversion by ' + dim + "</div>" + wkTable(ds.map(dimRow)));
+      var ds = w.funnel.dims.filter(function (d) { return d.dim === dim && Math.max(d.values[k[0]].sessions, d.values[k[1]].sessions) >= 100; });
+      if (ds.length) html.push('<div class="wk-h3">Sitewide, by ' + (dim === "source" ? "traffic source" : "device") + "</div>" +
+        cmpTable(fhead, ds.map(function (d) { return { label: d.key, cells: fcells(d.values) }; })));
     });
-    html.push("</section>");
+    html.push("</div>");
 
     // ad spend
-    var A = w.ads, arows = A.campaigns.map(function (c) {
-      var V = c.values, cur = V[k[0]] || {};
-      return wkRow(c.campaign, pick(V, "spend"), "money", null, "Meta ROAS " + wkFmt(cur.roas, "x") + " (was " + wkFmt((V[k[1]] || {}).roas, "x") +
-        ") · CPA " + wkFmt(cur.cpa, "money2") + " · " + wkFmt(cur.share, "pct") + " of Meta");
+    var arows = A.campaigns.filter(function (c) { return (c.values[k[0]] || {}).spend || (c.values[k[1]] || {}).spend; }).map(function (c) {
+      return { label: c.campaign, cells: [{ values: pick(c.values, "spend"), fmt: "money", good: null }, { values: pick(c.values, "share"), fmt: "pct", good: null },
+        { values: pick(c.values, "roas"), fmt: "x", good: true }, { values: pick(c.values, "cpa"), fmt: "money2", good: false },
+        { values: pick(c.values, "purchases"), fmt: "int", good: true }] };
     });
-    if (A.google) {
-      var G = A.google.values, gc = G[k[0]] || {};
-      arows.push(wkRow("Google", pick(G, "spend"), "money", null, "CPA " + wkFmt(gc.cpa, "money2") + " · brand " + wkFmt(gc.brand_spend, "money")));
-    }
-    html.push('<section><div class="sec-title">Ad spend</div>' + wkTable(arows));
+    if (A.google) arows.push({ label: "Google", sub: "incl. brand " + wkFmt((A.google.values[k[0]] || {}).brand_spend, "money"),
+      cells: [{ values: pick(A.google.values, "spend"), fmt: "money", good: null }, null, null,
+        { values: pick(A.google.values, "cpa"), fmt: "money2", good: false }, { values: pick(A.google.values, "conversions"), fmt: "int", good: true }] });
+    html.push('<div class="wk-sec"><h2>Ad spend</h2><div class="wk-sub">ROAS and purchases are Meta-reported. Google purchases are Google conversions.</div>' +
+      cmpTable(["", "Spend", "Share of Meta", "ROAS", "Cost per purchase", "Purchases"], arows));
     if (A.pockets && A.pockets.week && A.pockets.week.length) {
       var prevP = {};
       (A.pockets.prev_week || []).forEach(function (p) { prevP[p.angle] = p; });
-      html.push('<div class="wk-h">Messaging pockets · Meta, this week vs last</div><div class="lab-list">' + A.pockets.week.map(function (p) {
-        var was = prevP[p.angle];
-        return '<div class="rowline"><span style="color:var(--cream);font-weight:600">' + p.angle + "</span> · " + money(p.spend, 0) + " · " +
-          wkFmt(p.share, "pct") + (was ? ' <span style="color:var(--muted)">(was ' + wkFmt(was.share, "pct") + ")</span>" : ' <span style="color:var(--muted)">(new)</span>') +
-          " · ROAS " + wkFmt(p.roas, "x") + (was ? ' <span style="color:var(--muted)">(was ' + wkFmt(was.roas, "x") + ")</span>" : "") +
-          " · " + p.ads + " ads, top " + p.top_ad + " " + wkFmt(p.top_ad_share, "pct") + "</div>";
-      }).join("") + "</div>");
+      var pk = A.pockets.week.filter(function (p) { return p.share >= 1; });
+      html.push('<div class="wk-h3">Messaging pockets <span>· share of Meta spend this week, tick = last week</span></div>' +
+        barRows(pk.map(function (p) {
+          var was = prevP[p.angle], low = p.roas !== null && p.roas < 1.65;
+          return { label: esc(p.angle), sub: p.ads + " ads · top: " + esc(p.top_ad) + " (" + Math.round(p.top_ad_share) + "%)",
+            v: p.share, prev: was ? was.share : null, value: Math.round(p.share) + "% · " + money(p.spend, 0),
+            valueSub: '<span class="' + (low ? "warn" : "") + '">ROAS ' + wkFmt(p.roas, "x") + (low ? " ▼ below 1.65" : "") + "</span><br>" +
+              (was ? "last week " + Math.round(was.share) + "% at " + wkFmt(was.roas, "x") : "not live last week"),
+            title: p.angle + ": " + money(p.spend, 0) + ", " + p.purchases + " purchases" };
+        })) + barKey("last week"));
     }
-    if (A.new_ads) {
-      var nr = Object.keys(A.new_ads).map(function (lane) { return wkRow("New " + lane + " ads launched", A.new_ads[lane], "int", true); });
-      html.push(wkTable(nr));
-    }
-    html.push("</section>");
+    if (A.new_ads) html.push('<div class="kpi-grid" style="margin-top:18px">' + Object.keys(A.new_ads).map(function (lane) {
+      return kpi("New " + lane + " ads launched", A.new_ads[lane], "int", true);
+    }).join("") + "</div>");
+    html.push("</div>");
 
-    // attribution
-    var T = w.attribution;
-    var grp = function (rows) {
-      return wkTable(rows.map(function (r) {
-        var V = r.values, cur = V[k[0]] || {};
-        return wkRow(r.key, pick(V, "sales"), "money", true, num(cur.orders) + " orders · " + wkFmt(cur.share, "pct") + " of sales · AOV " + wkFmt(cur.aov, "money2"));
-      }));
+    // sales by channel
+    var COLORS = { "Social": "var(--c1)", "Direct or untracked": "var(--c2)", "Search": "var(--c3)" };
+    var colorOf = function (key) { return COLORS[key] || "var(--c-other)"; };
+    var stack = function (pkey, label) {
+      return '<div class="stack-row"><span>' + label + '</span><div class="stack">' + T.channels.filter(function (c) { return (c.values[pkey] || {}).share > 0; }).map(function (c) {
+        var sh = c.values[pkey].share;
+        return '<div title="' + esc(c.key) + ": " + sh.toFixed(1) + '%" style="width:' + sh + "%;background:" + colorOf(c.key) + '">' + (sh >= 12 ? Math.round(sh) + "%" : "") + "</div>";
+      }).join("") + "</div></div>";
     };
-    html.push('<section><div class="sec-title">Sales attribution <span class="sub">Shopify last click</span></div>' + grp(T.channels) +
-      '<div class="wk-h">New vs returning</div>' + grp(T.customer) + '<div class="wk-h">Market</div>' + grp(T.country));
-    var xr = [];
-    if (T.email) {
-      var E = T.email.values;
-      xr.push(wkRow("Email revenue (Klaviyo)", pick(E, "revenue"), "money", true, num((E[k[0]] || {}).orders) + " orders · " + wkFmt((E[k[0]] || {}).share, "pct") + " of sales"));
-      xr.push(wkRow("New email subscribers", pick(E, "new_subscribers"), "int", true));
-    }
-    var M = T.meta_vs_shopify.values;
-    xr.push(wkRow("Meta-reported revenue", pick(M, "meta_value"), "money", true, num((M[k[0]] || {}).meta_purchases) + " purchases · Shopify social " + wkFmt((M[k[0]] || {}).shopify_social_sales, "money")));
-    html.push('<div class="wk-h">Email and Meta</div>' + wkTable(xr) + "</section>");
+    var grpRows = function (rows) {
+      return rows.map(function (r) {
+        return { label: esc(r.key), cells: [{ values: pick(r.values, "sales"), fmt: "money", good: true }, { values: pick(r.values, "share"), fmt: "pct", good: null },
+          { values: pick(r.values, "orders"), fmt: "int", good: true }, { values: pick(r.values, "aov"), fmt: "money2", good: true }] };
+      });
+    };
+    var ghead = ["", "Sales", "Share", "Orders", "AOV"];
+    html.push('<div class="wk-sec"><h2>Where sales came from</h2><div class="wk-sub">Shopify last-click attribution. "Direct or untracked" mixes direct visits with orders Shopify could not track, mostly UK.</div>' +
+      '<div class="legend">' + T.channels.map(function (c) { return '<span><i style="background:' + colorOf(c.key) + '"></i>' + esc(c.key) + "</span>"; }).join("") + "</div>" +
+      stack(k[0], wkMode === "week" ? "This week" : "MTD") + stack(k[1], wkMode === "week" ? "Last week" : "Last month") +
+      cmpTable(ghead, grpRows(T.channels)) +
+      '<div class="wk-2col"><div><div class="wk-h3">New vs returning</div>' + cmpTable(ghead, grpRows(T.customer)) + "</div>" +
+      '<div><div class="wk-h3">Market</div>' + cmpTable(ghead, grpRows(T.country.filter(function (c) { return Math.max(c.values[k[0]].orders, c.values[k[1]].orders) >= 3; }))) + "</div></div>");
+    var em = T.email ? T.email.values : null, mv = T.meta_vs_shopify.values;
+    html.push('<div class="wk-h3">Email and Meta</div><div class="kpi-grid">' +
+      (em ? kpi("Email revenue (Klaviyo)", pick(em, "revenue"), "money", true) + kpi("Email share of sales", pick(em, "share"), "pct", true) +
+        kpi("New email subscribers", pick(em, "new_subscribers"), "int", true) : "") +
+      kpi("Meta-reported revenue", pick(mv, "meta_value"), "money", true, "Shopify credits social with " + wkFmt((mv[k[0]] || {}).shopify_social_sales, "money")) +
+      "</div></div>");
 
-    // units + attach + sets
-    var U = w.units, at = U.attach;
-    var urows = U.products.map(function (p) {
-      return wkRow(p.label, pick(p.values, "units"), "int", true, wkFmt((p.values[k[0]] || {}).sales, "money") + " sales");
-    });
-    var aRow = function (label, field, fmt) { return wkRow(label, pick(at, field), fmt || "pct", true); };
-    html.push('<section><div class="sec-title">Units and attach</div>' + wkTable(urows) +
-      '<div class="wk-h">Attach rates</div>' + wkTable([
-        aRow("Towel on hat orders", "towel_on_hat"), aRow("Robe on hat orders", "robe_on_hat"),
-        aRow("Hat on towel orders", "hat_on_towel"), aRow("Robe on towel orders", "robe_on_towel"),
-        aRow("Hat on robe orders", "hat_on_robe"), aRow("Towel on robe orders", "towel_on_robe"),
-        aRow("Orders with 2+ products", "multi_product"), aRow("Hat orders with 2+ hats", "hat_2plus"),
-        aRow("Hat orders with 3+ hats", "hat_3plus"), aRow("Hats per hat order", "hats_per_hat_order", "dec"),
-        aRow("Towel orders with 2+ towels", "towel_2plus")]) +
-      '<div class="wk-h">Ritual Sets</div>' + wkTable([
-        aRow("Sets sold", "ritual_sets", "int"), aRow("Orders with a full set", "ritual_set_orders", "int"),
-        aRow("Set order sales", "ritual_set_sales", "money"), aRow("Share of sales", "ritual_set_share_of_sales")]) +
-      '<div class="wk-h">Order mix</div>' + wkTable(U.mix.map(function (m) {
-        return wkRow(m.key, pick(m.values, "orders"), "int", null, wkFmt((m.values[k[0]] || {}).share, "pct") + " of orders · " + wkFmt((m.values[k[0]] || {}).sales, "money"));
+    // repeat customers
+    if (R) {
+      var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      html.push('<div class="wk-sec"><h2>Repeat customers</h2><div class="wk-sub">Repeat rate = customers who have ordered two or more times. Counted ' +
+        fmtDate(R.as_of) + ", grouped by the month of their first order. Recent months read low because those customers have had less time to come back.</div>" +
+        '<div class="kpi-grid" style="margin-top:14px">' + kpi("Orders from returning customers", pick(R.period, "share"), "pct", true) +
+        kpi("Returning-customer orders", pick(R.period, "orders"), "int", true) + kpi("Returning-customer AOV", pick(R.period, "aov"), "money2", true) +
+        (rl ? kpi("Repeat rate, all customers", { week: rl.rate, prev_week: rl.prev_rate, mtd: rl.rate, prev_mtd: null }, "pct", true,
+          num(rl.repeaters) + " of " + num(rl.customers)) : "") + "</div>" +
+        '<div class="wk-h3">Repeat rate by first-order month</div>' +
+        barRows(R.cohorts.map(function (c) {
+          var p = c.cohort.split("-");
+          return { label: MONTHS[Number(p[1]) - 1] + " " + p[0], sub: num(c.customers) + " customers" + (c.partial ? ", month still running" : ""),
+            v: c.rate, prev: null, young: c.partial, value: wkFmt(c.rate, "pct"), valueSub: num(c.repeaters) + " came back",
+            title: c.repeaters + " of " + c.customers + " customers ordered again" };
+        })) + "</div>");
+    }
+
+    // units, attach, sets
+    var aRow = function (label, field, fmt) { return { label: label, cells: [{ values: pick(at, field), fmt: fmt || "pct", good: true }] }; };
+    html.push('<div class="wk-sec"><h2>Units and attach</h2><div class="wk-sub">Paid orders only. Attach = share of orders containing the first product that also contain the second.</div>' +
+      cmpTable(["", "Units", "Sales"], U.products.map(function (p) {
+        return { label: p.label, cells: [{ values: pick(p.values, "units"), fmt: "int", good: true }, { values: pick(p.values, "sales"), fmt: "money", good: true }] };
+      })) +
+      '<div class="wk-2col"><div><div class="wk-h3">Attach rates</div>' + cmpTable(["", "Rate"], [
+        aRow("Towel on hat orders", "towel_on_hat"), aRow("Robe on hat orders", "robe_on_hat"), aRow("Hat on towel orders", "hat_on_towel"),
+        aRow("Robe on towel orders", "robe_on_towel"), aRow("Hat on robe orders", "hat_on_robe"), aRow("Towel on robe orders", "towel_on_robe")]) + "</div>" +
+      '<div><div class="wk-h3">Multi-buy and Ritual Sets</div>' + cmpTable(["", "Value"], [
+        aRow("Orders with 2+ products", "multi_product"), aRow("Hat orders with 2+ hats", "hat_2plus"), aRow("Hat orders with 3+ hats", "hat_3plus"),
+        aRow("Hats per hat order", "hats_per_hat_order", "dec"), aRow("Towel orders with 2+ towels", "towel_2plus"),
+        aRow("Ritual Sets sold", "ritual_sets", "int"), aRow("Ritual Set share of sales", "ritual_set_share_of_sales")]) + "</div></div>" +
+      '<div class="wk-h3">Order mix <span>· share of orders, tick = ' + prevName() + "</span></div>" +
+      barRows(U.mix.filter(function (m) { return (m.values[k[0]].orders || m.values[k[1]].orders) && m.key !== "Other"; }).map(function (m) {
+        var c = m.values[k[0]], pv = m.values[k[1]];
+        return { label: m.key, v: c.share, prev: pv.share, value: wkFmt(c.share, "pct"), valueSub: num(c.orders) + " orders · was " + wkFmt(pv.share, "pct") };
       })));
     if (U.variants && U.variants.length) {
       var prods = [];
       U.variants.forEach(function (v) { if (prods.indexOf(v.product) < 0) prods.push(v.product); });
-      prods.forEach(function (pr) {
-        var vs = U.variants.filter(function (v) { return v.product === pr; })
-          .sort(function (a, b) { return ((b.values[k[0]] || {}).units || 0) - ((a.values[k[0]] || {}).units || 0); });
-        html.push('<div class="wk-h">' + pr + " by variant</div>" + wkTable(vs.map(function (v) {
-          return wkRow(v.variant, pick(v.values, "units"), "int", true, wkFmt((v.values[k[0]] || {}).sales, "money"));
-        })));
-      });
+      html.push('<div class="wk-h3">Units by variant</div>' + cmpTable(["", "Units", "Sales"], [].concat.apply([], prods.map(function (pr) {
+        return U.variants.filter(function (v) { return v.product === pr && ((v.values[k[0]] || {}).units || (v.values[k[1]] || {}).units); })
+          .sort(function (a, b) { return ((b.values[k[0]] || {}).units || 0) - ((a.values[k[0]] || {}).units || 0); })
+          .map(function (v) {
+            return { label: esc(v.variant), sub: pr.replace("Cult of Sauna ", "").replace("The Sauna ", ""),
+              cells: [{ values: pick(v.values, "units"), fmt: "int", good: true }, { values: pick(v.values, "sales"), fmt: "money", good: true }] };
+          });
+      }))));
     }
-    html.push("</section>");
+    html.push("</div>");
 
-    html.push('<div class="footnote">' + (w.caveats || []).join(" ") + " Week = Sunday to Saturday, UK store days. MTD compares the same day numbers of last month.</div>");
+    html.push('<div class="wk-foot"><p>Week = Sunday to Saturday, UK store days. Month to date compares the same day numbers of last month.</p>' +
+      (w.caveats || []).map(function (c) { return "<p>" + esc(c) + "</p>"; }).join("") + "</div>");
+
     var body = document.getElementById("weekly-body");
     body.innerHTML = html.join("");
-    var bind = function (id, fn) {
-      body.querySelectorAll("#" + id + " .tab").forEach(function (t) {
-        t.addEventListener("click", function () { fn(t.dataset.v); renderWeekly(); });
-      });
-    };
-    bind("wk-mode", function (v) { wkMode = v === "Week" ? "week" : "mtd"; });
-    bind("wk-page", function (v) { wkPage = v; });
-    bind("wk-country", function (v) { wkCountry = v; });
+    body.querySelectorAll("#wk-mode button").forEach(function (b) { b.addEventListener("click", function () { wkMode = b.dataset.v; renderWeekly(); }); });
+    body.querySelectorAll("#wk-country button").forEach(function (b) { b.addEventListener("click", function () { wkCountry = b.dataset.v; renderWeekly(); }); });
   }
 
   function renderSweep(s) {
