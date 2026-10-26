@@ -418,7 +418,7 @@
   function num(n) { return n === null || n === undefined ? "—" : n.toLocaleString("en-GB"); }
   function fmtDate(iso) {
     if (!iso) return "—";
-    var p = iso.split("-");
+    var p = iso.slice(0, 10).split("-");
     return Number(p[2]) + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Number(p[1]) - 1];
   }
 
