@@ -117,6 +117,8 @@
   #page-tabs { display: none; justify-content: center; gap: 8px; margin-top: 24px; }
   #page-tabs.on { display: flex; }
   #flags-box { margin-top: 28px; border: 1px solid rgba(196,163,90,0.45); border-radius: 12px; padding: 16px 18px; }
+  #camp-body .n-title { font-size: 13px; font-weight: 600; color: var(--cream); }
+  #camp-body .n-title .sub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; }
   #flags-box .n-title { font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); }
   #flags-box ul { margin: 10px 0 0 16px; }
   #flags-box li { font-size: 13.5px; line-height: 1.55; color: var(--cream); margin-top: 7px; }
@@ -357,6 +359,11 @@
       </table>
     </section>
 
+    <section id="camp-section" style="display:none">
+      <div class="sec-title">Meta by campaign <span class="sub">each judged on its own 7d gate</span></div>
+      <div id="camp-body"></div>
+    </section>
+
     <section id="intl-section" style="display:none">
       <div class="sec-title">International · Mayple <span class="sub" id="intl-sub"></span></div>
       <table>
@@ -506,6 +513,31 @@
       row(d, "Purchases", "meta_purchases", {}) +
       (d.intl ? row(d, "CPA UK/US", "meta_core_cpa", { fmt: m2, goodUp: false }) : "");
 
+    // Meta by campaign: one table per campaign, gate metric highlighted
+    if (d.campaigns && d.campaigns.length) {
+      var GATE = { meta_roas: "Meta ROAS", net_roas: "Net ROAS", intl_roas: "Verified ROAS" };
+      var rx = function (v) { return v === null || v === undefined ? "—" : v.toFixed(2) + "×"; };
+      var crow = function (c, label, field, fmt, goodUp, bar) {
+        return '<tr><td class="label">' + label + "</td>" + ["yday", "d7", "mtd"].map(function (k) {
+          var cur = d.periods[k].campaigns[c.id] || {}, prev = d.periods[k].prev && d.periods[k].prev.campaigns[c.id];
+          var v = cur[field], cls = "";
+          if (bar && k === "d7" && v != null) cls = v >= bar ? ' class="pos"' : ' class="neg"';
+          return "<td" + cls + ">" + fmt(v) + deltaHtml(v, prev ? prev[field] : null, goodUp) + "</td>";
+        }).join("") + "</tr>";
+      };
+      document.getElementById("camp-section").style.display = "";
+      document.getElementById("camp-body").innerHTML = d.campaigns.map(function (c) {
+        var g = c.gate;
+        var sub = [c.daily_budget ? money(c.daily_budget, 0) + "/day" : null, c.status === "PAUSED" ? "paused" : null,
+          g ? "gate: 7d " + GATE[g.metric] + " ≥ " + g.bar.toFixed(1) : "no gate set"].filter(Boolean).join(" · ");
+        var rows = crow(c, "Spend", "spend", m0, null) + crow(c, "Purchases", "purchases", num, true) +
+          crow(c, "CPA", "cpa", m2, false) + crow(c, "Meta ROAS", "meta_roas", rx, true, g && g.metric === "meta_roas" ? g.bar : null);
+        if (g && g.metric !== "meta_roas") rows += crow(c, GATE[g.metric], g.metric, rx, true, g.bar);
+        return '<div class="n-title" style="margin-top:18px">' + c.name + ' <span class="sub">' + sub + "</span></div>" +
+          '<table><thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead><tbody>' + rows + "</tbody></table>";
+      }).join("");
+    }
+
     // International (Mayple): Shopify orders billed outside UK/US + every "INTL" Meta campaign
     if (d.intl) {
       var x2 = function (v) { return v === null || v === undefined ? "—" : v.toFixed(2) + "×"; };
@@ -603,7 +635,7 @@
       "MTD vs same days last month. Blended CPA = total ad spend ÷ all orders. Incoming = next PO (LH ETD ex-factory)." +
       (d.intl ? " International = orders billed outside the UK and US (Mayple Global markets, live " + fmtDate(d.intl.launch_date) +
         ") and every Meta campaign named INTL; both are already inside the Shop, Meta and All-in totals. Verified ROAS = Shopify net sales ÷ INTL spend " +
-        "(includes the odd organic overseas order). Meta CPA UK/US and its tripwire exclude INTL. Mayple stock = the Mayple Global location; its run-out dates use sales since launch and read \"early read\" until 7 days of sales." : "");
+        "(includes the odd organic overseas order). Meta CPA UK/US and its tripwire exclude INTL. Meta by campaign: each campaign is judged on its own 7d gate (green/red on the 7-day cell): CBO 7d Meta ROAS ≥ 2.0; Statics 1.8 net, where net = Meta ÷ 1.2 for the post-VAT gap (the Thursday scorer's Shopify check per ad stays the authority); INTL verified ROAS ≥ 1.8 after 14 days (proposed, not yet agreed). Mayple stock = the Mayple Global location; its run-out dates use sales since launch and read \"early read\" until 7 days of sales." : "");
 
     document.querySelectorAll(".yday-h").forEach(function (h) { h.textContent = d.window_meta.yday.label; });
     drawSpark(d.series);
