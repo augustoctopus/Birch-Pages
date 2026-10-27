@@ -341,6 +341,7 @@
       <div class="tabs" id="stock-tabs">
         <button class="tab active" data-market="US">US</button>
         <button class="tab" data-market="UK">UK</button>
+        <button class="tab" data-market="INTL" id="stock-tab-intl" style="display:none">Intl · Mayple</button>
       </div>
       <table id="stock-table">
         <thead><tr><th>SKU</th><th>Stock</th><th>Out by</th><th>Incoming</th></tr></thead>
@@ -353,6 +354,14 @@
       <table>
         <thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
         <tbody id="meta-rows"></tbody>
+      </table>
+    </section>
+
+    <section id="intl-section" style="display:none">
+      <div class="sec-title">International · Mayple <span class="sub" id="intl-sub"></span></div>
+      <table>
+        <thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead>
+        <tbody id="intl-rows"></tbody>
       </table>
     </section>
 
@@ -494,7 +503,24 @@
     document.getElementById("meta-rows").innerHTML =
       row(d, "Spend", "meta_spend", { fmt: m0, goodUp: null }) +
       row(d, "CPA", "meta_cpa", { fmt: m2, goodUp: false }) +
-      row(d, "Purchases", "meta_purchases", {});
+      row(d, "Purchases", "meta_purchases", {}) +
+      (d.intl ? row(d, "CPA UK/US", "meta_core_cpa", { fmt: m2, goodUp: false }) : "");
+
+    // International (Mayple): Shopify orders billed outside UK/US + every "INTL" Meta campaign
+    if (d.intl) {
+      var x2 = function (v) { return v === null || v === undefined ? "—" : v.toFixed(2) + "×"; };
+      var L = d.intl.since_launch;
+      document.getElementById("intl-section").style.display = "";
+      document.getElementById("intl-sub").textContent = "since " + fmtDate(d.intl.launch_date) + ": " +
+        money(L.spend, 0) + " spend, " + num(L.orders) + " orders, " + x2(L.roas) + " verified";
+      document.getElementById("intl-rows").innerHTML =
+        row(d, "Sales", "intl_sales", { fmt: m0 }) +
+        row(d, "Orders", "intl_orders", {}) +
+        row(d, "Meta spend", "intl_spend", { fmt: m0, goodUp: null }) +
+        row(d, "Cost per order", "intl_cost_per_order", { fmt: m2, goodUp: false }) +
+        row(d, "Verified ROAS", "intl_roas", { fmt: x2 }) +
+        row(d, "Meta ROAS", "intl_meta_roas", { fmt: x2 });
+    }
 
     document.getElementById("google-body").innerHTML = d.google_connected
       ? '<table><thead><tr><th></th><th class="yday-h">Yesterday</th><th>7 days</th><th>MTD</th></tr></thead><tbody>' +
@@ -538,6 +564,7 @@
           var days = s.days_left;
           var outCls = days === null ? "" : days < 14 ? ' class="neg"' : days < 30 ? "" : ' class="pos"';
           var outTxt = days === null ? "—" : days === 0 ? "now" : fmtDate(s.out_date);
+          if (s.early && days) { outCls = ""; outTxt += '<span class="inc" style="display:block">early read</span>'; }
           var name = (s.product.indexOf("Towel") >= 0 ? "Towel — " : s.product.indexOf("Robe") >= 0 ? "Robe — " : "Hat — ") + s.variant;
           var inc = "—";
           if (s.incoming) {
@@ -561,6 +588,8 @@
         renderStock(t.dataset.market);
       });
     });
+    if (d.stock.skus.some(function (s) { return s.market === "INTL"; }))
+      document.getElementById("stock-tab-intl").style.display = "";
     renderStock("US");
 
     var a = d.assumptions;
@@ -571,7 +600,10 @@
       a.fx_usd_gbp + "). From 1 Sep 2026 UK output VAT (20%) is also stripped from UK net sales in the profit model; " +
       "where checkout already collects VAT nothing extra is deducted. D2C only — B2B and payment fees excluded. " +
       "Email attributed revenue = Klaviyo attribution (campaigns + flows), event-time days. Deltas: yesterday vs day before; 7 days vs prior 7; " +
-      "MTD vs same days last month. Blended CPA = total ad spend ÷ all orders. Incoming = next PO (LH ETD ex-factory).";
+      "MTD vs same days last month. Blended CPA = total ad spend ÷ all orders. Incoming = next PO (LH ETD ex-factory)." +
+      (d.intl ? " International = orders billed outside the UK and US (Mayple Global markets, live " + fmtDate(d.intl.launch_date) +
+        ") and every Meta campaign named INTL; both are already inside the Shop, Meta and All-in totals. Verified ROAS = Shopify net sales ÷ INTL spend " +
+        "(includes the odd organic overseas order). Meta CPA UK/US and its tripwire exclude INTL. Mayple stock = the Mayple Global location; its run-out dates use sales since launch and read \"early read\" until 7 days of sales." : "");
 
     document.querySelectorAll(".yday-h").forEach(function (h) { h.textContent = d.window_meta.yday.label; });
     drawSpark(d.series);
