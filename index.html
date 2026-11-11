@@ -336,6 +336,10 @@
         <tbody id="shop-rows"></tbody>
       </table>
       <svg id="spark" viewBox="0 0 560 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div id="fy-block" style="display:none">
+        <div class="n-title" style="margin-top:18px">Financial year to date <span class="sub" id="fy-sub"></span></div>
+        <table><tbody id="fy-rows"></tbody></table>
+      </div>
     </section>
 
     <section>
@@ -502,10 +506,25 @@
       row(d, "Net profit", "net_profit", { fmt: m0, signed: true }) +
       row(d, "Orders", "orders", {}) +
       row(d, "AOV", "aov", { fmt: m2 }) +
-      '<tr><td class="label">Units (hat · towel)</td>' + ["yday", "d7", "mtd"].map(function (k) {
+      '<tr><td class="label">Units (hat · towel · robe)</td>' + ["yday", "d7", "mtd"].map(function (k) {
         var p = d.periods[k];
-        return "<td>" + num(p.hat_units) + " · " + num(p.towel_units) + "</td>";
+        return "<td>" + num(p.hat_units) + " · " + num(p.towel_units) + " · " + num(p.robe_units || 0) + "</td>";
       }).join("") + "</tr>";
+
+    if (d.fy) {
+      var f = d.fy, fyr = function (label, v, cls) {
+        return '<tr><td class="label">' + label + '</td><td' + (cls ? ' class="' + cls + '"' : "") + ">" + m0(v) + "</td></tr>";
+      };
+      document.getElementById("fy-block").style.display = "";
+      document.getElementById("fy-sub").textContent = fmtDate(f.start) + " to " + fmtDate(f.end) + " · " + f.days + " days" +
+        (f.covered ? "" : " · data gap, partial");
+      document.getElementById("fy-rows").innerHTML =
+        fyr("Sales", f.total_sales) + fyr("Net sales", f.net_sales) +
+        fyr("Unit costs", -f.unit_costs) + fyr("Fulfilment", -f.fulfilment) +
+        fyr("Fixed costs", -f.fixed_costs) + fyr("Ad spend", -f.all_spend) +
+        (f.vat_deducted ? fyr("UK VAT strip", -f.vat_deducted) : "") +
+        fyr("Net profit", f.net_profit, f.net_profit >= 0 ? "pos" : "neg");
+    }
 
     document.getElementById("meta-rows").innerHTML =
       row(d, "Spend", "meta_spend", { fmt: m0, goodUp: null }) +
@@ -627,8 +646,8 @@
     var a = d.assumptions;
     document.getElementById("footnote").textContent =
       "Net profit = net sales − unit costs (hat £" + a.unit_costs_gbp.hat + ", towel £" + a.unit_costs_gbp.towel +
-      ") − $" + a.delivery_per_order_usd + " delivery per order − $" +
-      (a.fixed_daily_usd.staff + a.fixed_daily_usd.software) + "/day staff & software − all ad spend (USD at " +
+      ", robe £" + a.unit_costs_gbp.robe + ") − fulfilment at " + Math.round(a.fulfilment_pct_of_net_sales * 100) +
+      "% of net sales − $" + a.fixed_daily_usd + "/day fixed costs − all ad spend (USD at " +
       a.fx_usd_gbp + "). From 1 Sep 2026 UK output VAT (20%) is also stripped from UK net sales in the profit model; " +
       "where checkout already collects VAT nothing extra is deducted. D2C only — B2B and payment fees excluded. " +
       "Email attributed revenue = Klaviyo attribution (campaigns + flows), event-time days. Deltas: yesterday vs day before; 7 days vs prior 7; " +
